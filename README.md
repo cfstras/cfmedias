@@ -8,16 +8,16 @@ cfmedias aims to let you take control of your media library.
 It lets you manage all of your media in a central place.
 
 What it should be one day:
-    -   lightweight
-    -   fast
-    -   supporting every media format you could imagine
-    -   have networking support to let you share media within your home network
-        and keeping it in sync whilst letting you stream it freely
-    -   able to import libraries from iTunes, WinAmp and others
-    -   able to automatically add tags and pictures to your media
-    -   able to make full or incremental backups
-    -   highly portable
-    etc, etc...
+-   lightweight
+-   fast
+-   supporting every media format you could imagine
+-   have networking support to let you share media within your home network
+    and keeping it in sync whilst letting you stream it freely
+-   able to import libraries from iTunes, WinAmp and others
+-   able to automatically add tags and pictures to your media
+-   able to make full or incremental backups
+-   highly portable
+etc, etc...
 
 License
 -------
