@@ -24,7 +24,7 @@ etc, etc...
 License
 -------
 Currently, cfmedias is under a Beerware license. This means you are free to use it (and its code)
-for anything you want, but the author would be happy if you tell them about what you do with it
+for anything you want, but the authors would be happy if you tell them about what you do with it
 and also very happy if you spend them a beer.
 
 Disclaimer
