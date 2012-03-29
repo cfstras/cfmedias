@@ -12,7 +12,7 @@ What it should be one day:
 - lightweight
 - fast
 - supporting every media format you could imagine
-- have networking support to let you share media within your home network
+- networking-enabled to let you share media within your home network
   and keeping it in sync whilst letting you stream it freely
 - able to import libraries from iTunes, WinAmp and others
 - able to automatically add tags and pictures to your media
