@@ -3,6 +3,7 @@ Database tables
 and fields
 
 all:
+
 - hash
 - title
 - filesize
@@ -13,6 +14,7 @@ all:
 - cover-hash
 
 audio:
+
 - artist(s)
 - album
 - genre(s)
