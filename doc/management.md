@@ -31,25 +31,25 @@ database
 
 software:
 - sqlite
-  pro: fast, small.
-  con: only single-instance. hard to multi-thread.
+   - pro: fast, small.
+   - con: only single-instance. hard to multi-thread.
 - mysql
-  pro: easy to multithread, multi-user
-  con: bigger, not that fast
+   - pro: easy to multithread, multi-user
+   - con: bigger, not that fast
 - postgres
-  pro: heard it's faster
-  con: complex setup
+   - pro: heard it's faster
+   - con: complex setup
 - hmm.
 
 tables:
-+ music, videos, etc. each its own table because they have different attributes
-+ one table for packages
-+ one for tags (how do we save taggings? how do we search for them fast?)
-+ every user gets a seperate db (table/file?) containing his playcounts, favorites and lists
+ + music, videos, etc. each its own table because they have different attributes
+ + one table for packages
+ + one for tags (how do we save taggings? how do we search for them fast?)
+ + every user gets a seperate db (table/file?) containing his playcounts, favorites and lists
 
 performance:
 do we
-+ keep the library requests to a minimum by caching data in memory or
-+ keep only in memory what's on-screen and release everything else
-+ let the user specify the amount of ram used?
+ + keep the library requests to a minimum by caching data in memory or
+ + keep only in memory what's on-screen and release everything else
+ + let the user specify the amount of ram used?
 
