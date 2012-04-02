@@ -30,6 +30,7 @@ database
 --------
 
 software:
+
 - sqlite
    - pro: fast, small.
    - con: only single-instance. hard to multi-thread.
@@ -42,6 +43,7 @@ software:
 - hmm.
 
 tables:
+
  + music, videos, etc. each its own table because they have different attributes
  + one table for packages
  + one for tags (how do we save taggings? how do we search for them fast?)
@@ -49,6 +51,7 @@ tables:
 
 performance:
 do we
+
  + keep the library requests to a minimum by caching data in memory or
  + keep only in memory what's on-screen and release everything else
  + let the user specify the amount of ram used?
