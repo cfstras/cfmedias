@@ -30,15 +30,15 @@ database
 --------
 
 software:
-- sqlite:
-  +: fast, small.
-  -: only single-instance. hard to multi-thread.
-- mysql:
-  +: easy to multithread, multi-user
-  -: bigger, not that fast
-- postgres:
-  +: heard it's faster
-  -: complex setup
+- sqlite
+  pro: fast, small.
+  con: only single-instance. hard to multi-thread.
+- mysql
+  pro: easy to multithread, multi-user
+  con: bigger, not that fast
+- postgres
+  pro: heard it's faster
+  con: complex setup
 - hmm.
 
 tables:
