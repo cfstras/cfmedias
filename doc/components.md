@@ -9,7 +9,8 @@ Components of the program
   
 - cli:
   + is just a set of methods
-  + with a parser
+  + keeps a list of all methods and maps it to the matching component
+  + expects cmd or net input, parses and executes methods
   
 - gui:
   + displays information
