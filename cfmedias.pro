@@ -12,8 +12,10 @@ TEMPLATE = app
 
 SOURCES += src/main.cpp\
         src/gui.cpp \
+    src/cli.cpp
 
 HEADERS  += src/gui.h \
-    src/main.h
+    src/main.h \
+    src/cli.h
 
 FORMS    += src/gui.ui \

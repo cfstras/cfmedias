@@ -13,15 +13,19 @@ bool parseArgs(Settings, int, char*[]);
 
 void startGUI();
 
+void startCLI();
+
 void startCore();
 
-void startModule(std::string);
+void startModule(QString name);
 
 void stopGUI();
 
+void stopCLI();
+
 void stopCore();
 
-void stopModule();
+void stopModule(QString name);
 
 void printHelp();
 
