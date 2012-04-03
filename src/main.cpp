@@ -1,4 +1,3 @@
-#include <QtGui/QApplication>
 #include <QString>
 #include <iostream>
 #include <string>
@@ -20,10 +19,15 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    //GUI w;
-    //w.show();
-    
+    if(! settings.nogui) {
+        startGUI();
+    } else {
+        startCLI();
+    }
+
     //return a.exec();
+    //TODO don't exit now
+    return 0;
 }
 
 bool parseArgs(Settings settings, int argc, char *argv[]) {
@@ -46,19 +50,24 @@ bool parseArgs(Settings settings, int argc, char *argv[]) {
             printHelp();
             return false;
         }
-
-
     }
+    return true;
 }
 
 void printHelp() {
     cout <<"cmd parameters:"<<endl;
-
     cout << "--help\t -h\t print help and exit"<<endl;
     cout << "--nogui\t -n\t run in CLI only mode"<<endl;
 }
 
 void startGUI() {
+    GUI w;
+    w.show();
+}
+
+void startCLI() {
+    //start expecting input on cmd or net
+
 
 }
 
@@ -66,7 +75,7 @@ void startCore(){
 
 }
 
-void startModule(string module){
+void startModule(QString name){
 
 }
 
@@ -78,6 +87,6 @@ void stopCore(){
 
 }
 
-void stopModule(){
+void stopModule(QString name){
 
 }
