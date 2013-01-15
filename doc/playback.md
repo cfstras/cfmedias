@@ -22,12 +22,12 @@ Genres are basically pre-defined sets of values for the abovementioned propertie
 Mathematically, a song is just a point in the n-dimensional room of properties. Viewing it as a room where the genres
 are the dimensions (so just a different [basis](http://en.wikipedia.org/wiki/Basis_%28linear_algebra%29)), we can assign it
 coordinates in that space. If we have the mappings from our genres to their properties, using a little geometry, we can
-derive a songs properties by transforming the (genre,value) tuples to the (property,value) base.
+derive a songs properties by transforming the (genre,value) tuples to the (property,value) basis.
 
 The number of dimensions is rather infinite, let's limit it to the number of genres a user listens to.
 
 ### What now?
-So now that we have every song assigned a vector in our genre-base, we can calculate the songs properties and also know,
+So now that we have every song assigned a vector in our genre-basis, we can calculate the songs properties and also know,
 which tags (= genres) other users would assign to such a song.
 
 Using the data we gain about the song from the user, we can construct and correct the genres position in the property-room,
