@@ -4,7 +4,7 @@ Music organizing philosophy
 Some general thoughts about how to store my music metadata.
 
 Music in a database should have, additionally to being ordered in Artist/Album/Genre, attributes like _mood_, _tempo_,
-_syntheticness_ or _aggressivity_.
+_syntheticness_ or _aggressiveness_.
 
 The concept of tags, which I quite like, is an approach to this. But: tags are only boolean.
 A song can have a tag or well, not have it.  
