@@ -1,25 +1,29 @@
 Music organizing philosophy
 ---------------------------
 
-Some general thoughts about how to store my music metadata.
+Some general thoughts about how to store music metadata.
 
-Music in a database should have, additionally to being ordered in Artist/Album/Genre, attributes like _mood_, _tempo_,
-_syntheticness_ or _aggressiveness_.
+Music is most fun when it's surprising, but meets your taste. Music listening (marketing) systems like Last.fm
+are based on that principle. Underlying suitable algorithms thus need a formalization of aesthetical similarity
+and a concept of what kind of music it is.
 
-The concept of tags, which I quite like, is an approach to this. But: tags are only boolean.
-A song can have a tag or well, not have it.  
-By having a ginormous amount of sub-genres, sub-sub-genres and sub³genres, you can still add some granularity,
-however giving a song such tags can be time-consuming and mostly inaccurate.  
+Music in a database should therefore, additionally to being ordered in Artist/Album/Genre, have attributes like _mood_, _tempo_,
+_syntheticness_ or _aggressiveness_.  
+The concept of tags, which I quite like, is an approach to this. Tags are boolean only, so they can't always be precise.
+A song can have a tag or -- well, -- not have a tag.  
+By having a ginormous amount of sub-genres, sub-sub-genres and sub³genres, one can still add some granularity.
+However, giving a song such tags can be time-consuming and mostly inaccurate.  
 _Last.fm_ solved this by having each user tag his/her songs and display the most-used tags on a song first.
 For this to work, the song has to be listened to by many users.
-For less well-known music, there is never enough tag-data for a song.
+For less well-known music, there is never enough tag data for a song.
 
 How to solve this?
 
 ### With Math
-Woo, math. You could describe a song as a set of properties (see above) and a value indicating their strength.  
+Woo, math. You could describe a song with a set of properties (see above)
+each having a value specifying to what extent that property applies.  
 Assigning these values (for me) often requires more thinking time than just assigning genres (or subgenres).
-Genres are basically pre-defined sets of values for the abovementioned properties, and because they are easier to deal with
+Genres are basically predefined sets of values for the abovementioned properties, and because they are easier to deal with
 (in your brain), let's use a set of genres and a value for how much this song represents a genre.
 
 Mathematically, a song is just a point in the n-dimensional space of properties. Viewing it as a space where the genres
