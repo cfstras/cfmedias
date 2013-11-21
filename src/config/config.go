@@ -3,14 +3,22 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 )
 
 type configuration struct {
-	dbFile string
+	DbFile string
 }
 
 var config *configuration
+
+// Initializes the config with standard parameters
+func Init() {
+	log.Println("Initializing new configuation.")
+	config = &configuration{
+		DbFile: "db.sqlite"}
+}
 
 func Load(configFile string) error {
 	if config != nil {
@@ -18,6 +26,10 @@ func Load(configFile string) error {
 	}
 
 	file, err := os.Open(configFile)
+	if os.IsNotExist(err) {
+		Init()
+		return Save(configFile)
+	}
 	if err != nil {
 		return err
 	}
@@ -41,15 +53,18 @@ func Save(configFile string) error {
 		return errors.New("Config has not been initialized, cannot save!")
 	}
 
-	file, err := os.Open(configFile)
+	file, err := os.Create(configFile)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	err = encoder.Encode(config)
+	str, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
+		return err
+	}
+
+	if _, err := file.Write(str); err != nil {
 		return err
 	}
 

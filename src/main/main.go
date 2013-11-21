@@ -25,4 +25,12 @@ func main() {
 
 	// listen for commands
 	core.CmdLine()
+
+	// CmdLine is finished, shutdown
+	log.Println("Finished, exiting...")
+	err = core.Shutdown()
+	if err != nil {
+		log.Println(err.Error())
+	}
+	os.Exit(0)
 }

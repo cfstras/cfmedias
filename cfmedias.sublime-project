@@ -8,8 +8,14 @@
     "settings": {
         "GoSublime": {
             "env": {
-                "GOPATH": "$HOME/my-project"
+                "GOPATH": "$project"
             }
         }
-    }
+    },
+    "build_systems": [
+        {
+            "name": "Go-cfs",
+            "shell_cmd": "make"
+        }
+    ]
 }
