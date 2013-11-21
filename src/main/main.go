@@ -2,7 +2,7 @@ package main
 
 import (
 	"core"
-	"fmt"
+	"log"
 )
 
 func main() {
@@ -10,12 +10,15 @@ func main() {
 	//TODO check args
 
 	// start engine
-	fmt.Println("Starting cfmedias")
+	log.Println("Starting cfmedias")
 	err := core.Start()
 
 	if err != nil {
-		fmt.Println(err.Error())
-		fmt.Println("Exiting")
+		log.Println("Caught an error:", err.Error(), "- exiting...")
+		err = core.Shutdown()
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}
 
 	// listen for commands

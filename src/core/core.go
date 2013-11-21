@@ -3,7 +3,7 @@ package core
 import (
 	"config"
 	//	"db"
-	"fmt"
+	"log"
 )
 
 func Start() error {
@@ -15,8 +15,20 @@ func Start() error {
 	return nil
 }
 
+func Shutdown() error {
+	// disconnect from db
+	// save config
+	err := config.Save("config.json")
+	if err != nil {
+		//TODO don't catch if this is an init error
+		log.Println("Error while saving config:", err.Error())
+	}
+
+	return err
+}
+
 // start a REPL shell.
 func CmdLine() {
-	fmt.Println("cfmedias", currentVersion)
+	log.Println("cfmedias", currentVersion)
 	//TODO
 }
