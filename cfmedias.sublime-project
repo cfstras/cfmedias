@@ -1,9 +1,15 @@
 {
-	"folders":
-	[
-		{
-			"follow_symlinks": true,
-			"path": "/home/claus/vcs/cfmedias"
-		}
-	]
+    "folders": [
+        {
+            "follow_symlinks": true,
+            "path": "/home/claus/vcs/cfmedias"
+        }
+    ],
+    "settings": {
+        "GoSublime": {
+            "env": {
+                "GOPATH": "$HOME/my-project"
+            }
+        }
+    }
 }

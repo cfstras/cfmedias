@@ -3,6 +3,7 @@ package main
 import (
 	"core"
 	"log"
+	"os"
 )
 
 func main() {
@@ -19,6 +20,7 @@ func main() {
 		if err != nil {
 			log.Println(err.Error())
 		}
+		os.Exit(1)
 	}
 
 	// listen for commands
