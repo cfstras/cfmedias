@@ -8,7 +8,7 @@ all: build
 .PHONY: build
 build:
 	mkdir -p bin
-	go build -o bin/cfmedias -race main
+	go build -o bin/cfmedias main
 
 .PHONY: clean
 clean:
@@ -18,3 +18,7 @@ run: build start
 
 start:
 	bin/cfmedias
+
+deps:
+	go get github.com/mattn/go-sqlite3
+	go get github.com/go-contrib/uuid

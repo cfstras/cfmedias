@@ -7,21 +7,21 @@ import (
 	"os"
 )
 
-type configuration struct {
+type Configuration struct {
 	DbFile string
 }
 
-var config *configuration
+var Current *Configuration
 
 // Initializes the config with standard parameters
 func Init() {
 	log.Println("Initializing new configuation.")
-	config = &configuration{
+	Current = &Configuration{
 		DbFile: "db.sqlite"}
 }
 
 func Load(configFile string) error {
-	if config != nil {
+	if Current != nil {
 		return errors.New("Config already loaded.")
 	}
 
@@ -36,20 +36,20 @@ func Load(configFile string) error {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	var read configuration
+	var read Configuration
 	err = decoder.Decode(&read)
 	if err != nil {
 		return err
 	}
 
-	config = &read
+	Current = &read
 
 	//TODO ensure minimal config is done
 	return nil
 }
 
 func Save(configFile string) error {
-	if config == nil {
+	if Current == nil {
 		return errors.New("Config has not been initialized, cannot save!")
 	}
 
@@ -59,7 +59,7 @@ func Save(configFile string) error {
 	}
 	defer file.Close()
 
-	str, err := json.MarshalIndent(config, "", "  ")
+	str, err := json.MarshalIndent(Current, "", "  ")
 	if err != nil {
 		return err
 	}

@@ -1,2 +1,7 @@
-/*.user
+
 bin/
+pkg/
+src/github.com/
+
+config.json
+db.sqlite

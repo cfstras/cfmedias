@@ -2,14 +2,18 @@ package core
 
 import (
 	"config"
-	//	"db"
+	"db"
 	"log"
 )
 
 func Start() error {
-	// connect to db
+	// load config
 	err := config.Load("config.json")
 	if err != nil {
+		return err
+	}
+	// connect to db
+	if err = db.Open(); err != nil {
 		return err
 	}
 	return nil
