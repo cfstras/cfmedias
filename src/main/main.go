@@ -22,7 +22,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	sineLogon()
+	go sineLogon()
 
 	// listen for commands
 	core.CmdLine()

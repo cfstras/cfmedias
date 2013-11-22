@@ -9,6 +9,7 @@ import (
 
 type Configuration struct {
 	DbFile string
+	DbPath string
 }
 
 var Current *Configuration
@@ -17,7 +18,9 @@ var Current *Configuration
 func Init() {
 	log.Println("Initializing new configuation.")
 	Current = &Configuration{
-		DbFile: "db.sqlite"}
+		DbFile: "db.sqlite",
+		DbPath: "~/Music",
+	}
 }
 
 func Load(configFile string) error {

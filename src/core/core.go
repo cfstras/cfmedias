@@ -3,6 +3,7 @@ package core
 import (
 	"config"
 	"db"
+	"fmt"
 	"log"
 )
 
@@ -16,6 +17,9 @@ func Start() error {
 	if err = db.Open(); err != nil {
 		return err
 	}
+
+	// update local files
+	db.Update()
 	return nil
 }
 
@@ -34,5 +38,20 @@ func Shutdown() error {
 // start a REPL shell.
 func CmdLine() {
 	log.Println("cfmedias", currentVersion)
+
+	for run := true; run; {
+		fmt.Print("> ")
+		var str string
+		_, err := fmt.Scanln(&str)
+		if err != nil && err.Error() == "unexpected newline" {
+
+		} else if err != nil {
+			fmt.Println("error:", err.Error())
+		} else {
+			//TODO parse
+			fmt.Println("read", str)
+		}
+	}
+
 	//TODO
 }
