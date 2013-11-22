@@ -22,6 +22,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	sineLogon()
 
 	// listen for commands
 	core.CmdLine()
@@ -32,5 +33,4 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	os.Exit(0)
 }
