@@ -22,13 +22,13 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	go sineLogon()
+	//go sineLogon()
 
 	// listen for commands
 	core.CmdLine()
 
 	// CmdLine is finished, shutdown
-	log.Println("Finished, exiting...")
+	log.Println("Exiting...")
 	err = core.Shutdown()
 	if err != nil {
 		log.Println(err.Error())

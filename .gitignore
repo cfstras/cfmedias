@@ -2,6 +2,9 @@
 bin/
 pkg/
 src/github.com/
+src/code.google.com/
 
 config.json
 db.sqlite
+
+*.sublime-workspace
