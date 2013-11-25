@@ -21,6 +21,17 @@ What it should be one day:
 
 etc, etc...
 
+Compiling
+---------
+
+You will need the Go package, git, mercurial, libportaudio, libsqlite3 and taglib.  
+On OS X, you need at least Go 1.2rc5.
+
+    git clone --recursive https://github.com/cfstras/cfmedias
+    cd cfmedias
+    make deps
+    make run
+
 
 License
 -------
