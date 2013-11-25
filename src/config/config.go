@@ -8,8 +8,8 @@ import (
 )
 
 type Configuration struct {
-	DbFile string
-	DbPath string
+	DbFile    string
+	MediaPath string
 }
 
 var Current *Configuration
@@ -18,8 +18,8 @@ var Current *Configuration
 func Init() {
 	log.Println("Initializing new configuation.")
 	Current = &Configuration{
-		DbFile: "db.sqlite",
-		DbPath: "~/Music",
+		DbFile:    "db.sqlite",
+		MediaPath: "~/Music",
 	}
 }
 
