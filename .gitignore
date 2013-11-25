@@ -1,7 +1,8 @@
 
 bin/
 pkg/
-src/github.com/
+src/github.com/go-contrib/
+src/github.com/mattn/
 src/code.google.com/
 
 config.json
