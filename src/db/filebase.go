@@ -2,8 +2,7 @@ package db
 
 import (
 	"config"
-	"fmt"
-	"log"
+	log "logger"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -17,30 +16,38 @@ func Update() {
 	if strings.Contains(path, "~") {
 		user, err := user.Current()
 		if err != nil {
-			log.Println("Error getting user home directory:", err)
+			log.Log.Println("Error getting user home directory:", err)
 			return
 		}
 		path = strings.Replace(path, "~", user.HomeDir, -1)
 	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		log.Log.Println("Error: Music path", path, "does not exist!")
+		return
+	}
 	err := filepath.Walk(path, step)
-	fmt.Println(err)
+	if err != nil {
+		log.Log.Println(err)
+	}
 }
 
 func step(file string, info os.FileInfo, err error) error {
-	if info.Name() == "." || info.Name() == ".." {
+	if info == nil ||
+		info.Name() == "." ||
+		info.Name() == ".." {
 		return nil
 	}
 	if info.IsDir() {
 		//log.Println("in", file)
 	} else if linked, err := filepath.EvalSymlinks(file); err != nil || file != linked {
 		if err != nil {
-			log.Println("Error walking files:", err.Error())
+			log.Log.Println("Error walking files:", err.Error())
 			return nil
 		}
 		filepath.Walk(linked, step)
 	} else {
 		//TODO do something with it!
-		log.Println(file)
+		log.Log.Println(file)
 		Analyze(file)
 	}
 	return nil
@@ -49,13 +56,22 @@ func step(file string, info os.FileInfo, err error) error {
 func Analyze(file string) {
 	tag, err := taglib.Read(file)
 	if err != nil {
-		log.Println("error reading file", file, "-", err)
+		log.Log.Println("error reading file", file, "-", err)
 		return
 	}
 
-	title := tag.Title()
-	artist := tag.Artist()
-	album := tag.Album()
+	item := &Item{
+		Title:       tag.Title(),
+		Artist:      tag.Artist(),
+		Genre:       tag.Genre(),
+		TrackNumber: uint32(tag.Track())}
 
-	fmt.Println(artist, "/", album, "-", title)
+	//TODO get album, folder, added, check ID etc
+
+	err = dbmap.Insert(item)
+	if err != nil {
+		log.Log.Println("error inserting item", item, err)
+		return
+	}
+	log.Log.Println("inserted", item)
 }

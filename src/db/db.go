@@ -3,12 +3,14 @@ package db
 import (
 	"config"
 	"database/sql"
+	"github.com/coopernurse/gorp"
 	"github.com/go-contrib/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
+	log "logger"
 )
 
 var db *sql.DB
+var dbmap *gorp.DbMap
 var guid string
 
 func Open() error {
@@ -18,6 +20,9 @@ func Open() error {
 	if err != nil {
 		return err
 	}
+
+	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	dbmap.TraceOn("[db]", log.Log)
 
 	if err := checkTables(); err != nil {
 		return err
@@ -30,6 +35,10 @@ func Open() error {
 	}
 
 	return nil
+}
+
+func Close() error {
+	return db.Close()
 }
 
 // checks db schema and tables
@@ -56,7 +65,7 @@ func checkTables() error {
 			return err
 		}
 		guid = guidRead
-		log.Println("Database loaded with GUID", guid)
+		log.Log.Println("Database loaded with GUID", guid)
 		//TODO set locked
 	} else {
 		guid = uuid.NewV4().String()
@@ -67,17 +76,25 @@ func checkTables() error {
 		if err != nil {
 			return e(qu, nil, err)
 		}
-		log.Println("Database created with GUID", guid)
+		log.Log.Println("Database created with GUID", guid)
 	}
 
-	//TODO checkTables()
+	dbmap.AddTableWithName(Item{}, "items").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Album{}, "albums").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Folder{}, "folders").SetKeys(true, "Id")
+
+	err = dbmap.CreateTablesIfNotExists()
+	if err != nil {
+		log.Log.Println("Could not create database tables!")
+		return err
+	}
 
 	return nil
 }
 
 func e(query string, res sql.Result, err error) error {
 	if err != nil {
-		log.Println("SQL error at query:", query)
+		log.Log.Println("SQL error at query:", query)
 		return err
 	}
 	return nil
@@ -85,7 +102,7 @@ func e(query string, res sql.Result, err error) error {
 
 func q(query string, res *sql.Rows, err error) error {
 	if err != nil {
-		log.Println("SQL error at query:", query)
+		log.Log.Println("SQL error at query:", query)
 		return err
 	}
 	return nil
