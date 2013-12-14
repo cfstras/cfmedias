@@ -29,8 +29,8 @@ func main() {
 
 	// CmdLine is finished, shutdown
 	log.Println("Exiting...")
-	err = core.Shutdown()
-	if err != nil {
+
+	if err = core.Shutdown(); err != nil {
 		log.Println(err.Error())
 	}
 }

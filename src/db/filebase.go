@@ -2,6 +2,7 @@ package db
 
 import (
 	"config"
+	"github.com/coopernurse/gorp"
 	log "logger"
 	"os"
 	"os/user"
@@ -9,6 +10,10 @@ import (
 	"strings"
 	"taglib"
 )
+
+type updater struct {
+	tx *gorp.Transaction
+}
 
 func Update() {
 	// keep file base up to date
@@ -25,13 +30,23 @@ func Update() {
 		log.Log.Println("Error: Music path", path, "does not exist!")
 		return
 	}
-	err := filepath.Walk(path, step)
+	tx, err := dbmap.Begin()
+	if err != nil {
+		log.Log.Println("Could not start db transaction")
+		return
+	}
+	up := &updater{tx}
+	err = filepath.Walk(path, up.step)
 	if err != nil {
 		log.Log.Println(err)
 	}
+
+	if err = up.tx.Commit(); err != nil {
+		log.Log.Println("Updater error:", err)
+	}
 }
 
-func step(file string, info os.FileInfo, err error) error {
+func (up *updater) step(file string, info os.FileInfo, err error) error {
 	if info == nil ||
 		info.Name() == "." ||
 		info.Name() == ".." {
@@ -44,16 +59,15 @@ func step(file string, info os.FileInfo, err error) error {
 			log.Log.Println("Error walking files:", err.Error())
 			return nil
 		}
-		filepath.Walk(linked, step)
+		filepath.Walk(linked, up.step)
 	} else {
-		//TODO do something with it!
 		log.Log.Println(file)
-		Analyze(file)
+		up.analyze(file)
 	}
 	return nil
 }
 
-func Analyze(file string) {
+func (up *updater) analyze(file string) {
 	tag, err := taglib.Read(file)
 	if err != nil {
 		log.Log.Println("error reading file", file, "-", err)
@@ -68,8 +82,7 @@ func Analyze(file string) {
 
 	//TODO get album, folder, added, check ID etc
 
-	err = dbmap.Insert(item)
-	if err != nil {
+	if err = up.tx.Insert(item); err != nil {
 		log.Log.Println("error inserting item", item, err)
 		return
 	}

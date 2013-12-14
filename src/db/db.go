@@ -38,7 +38,7 @@ func Open() error {
 }
 
 func Close() error {
-	return db.Close()
+	return dbmap.Db.Close()
 }
 
 // checks db schema and tables
@@ -48,13 +48,15 @@ func checkTables() error {
 	(guid varchar(34) not null primary key, locked bool)`
 	_, err := db.Exec(qu)
 	if err != nil {
-		return e(qu, nil, err)
+		log.Log.Println("SQL error", err, "at query:", qu)
+		return err
 	}
 
 	qu = `select guid, locked from cfmedias`
 	res, err := db.Query(qu)
 	if err != nil {
-		return q(qu, res, err)
+		log.Log.Println("SQL error", err, "at query:", qu)
+		return err
 	}
 
 	if res.Next() {
@@ -74,10 +76,12 @@ func checkTables() error {
 		qu = `insert into cfmedias values (?, ?)`
 		_, err := db.Exec(qu, guid, locked)
 		if err != nil {
-			return e(qu, nil, err)
+			log.Log.Println("SQL error", err, "at query:", qu)
+			return err
 		}
 		log.Log.Println("Database created with GUID", guid)
 	}
+	res.Close()
 
 	dbmap.AddTableWithName(Item{}, "items").SetKeys(true, "Id")
 	dbmap.AddTableWithName(Album{}, "albums").SetKeys(true, "Id")
@@ -89,22 +93,6 @@ func checkTables() error {
 		return err
 	}
 
-	return nil
-}
-
-func e(query string, res sql.Result, err error) error {
-	if err != nil {
-		log.Log.Println("SQL error at query:", query)
-		return err
-	}
-	return nil
-}
-
-func q(query string, res *sql.Rows, err error) error {
-	if err != nil {
-		log.Log.Println("SQL error at query:", query)
-		return err
-	}
 	return nil
 }
 

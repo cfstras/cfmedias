@@ -20,6 +20,11 @@ func initCmd() {
 	registerBaseCommands()
 }
 
+func exitCmd() {
+	runCmdLine = false
+	os.Stdin.Close()
+}
+
 // stores the loaded commands, sorted by verb.
 // multiple verbs may point to the same command.
 var commandMap map[string]Command
@@ -55,8 +60,6 @@ func registerBaseCommands() {
 		"Shuts down and exits.",
 		func(_ []string) {
 			Shutdown()
-			runCmdLine = false
-			os.Stdin.Close()
 		}}
 	RegisterCommand(quit)
 
