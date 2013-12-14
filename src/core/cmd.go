@@ -24,14 +24,16 @@ func initCmd() {
 // exits the cmd line
 func exitCmd() error {
 	replActive = false
+	repl.Close()
+
+	if reading {
+		fmt.Println("Press enter to continue...")
+	}
 	err := os.Stdin.Close()
 	if err != nil {
 		fmt.Println("close error", err)
 	}
-	if reading {
-		fmt.Println("Press any key...")
-	}
-	return repl.Close()
+	return nil
 }
 
 // stores the loaded commands, sorted by verb.
