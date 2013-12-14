@@ -24,5 +24,6 @@ deps:
 	go get github.com/go-contrib/uuid
 	go get code.google.com/p/portaudio-go/portaudio
 	go get github.com/coopernurse/gorp
+	go get github.com/peterh/liner
 
 	echo please install portaudio1.9-dev and libtagc0-dev with your package manager
