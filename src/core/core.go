@@ -50,10 +50,8 @@ func Shutdown() error {
 		return nil
 	}
 
-	exitCmd()
-
-	shutUp = false
 	log.Log.Println("shutting down.")
+
 	// disconnect from db
 	if err := db.Close(); err != nil {
 		log.Log.Println("Error closing database:", err)
@@ -64,6 +62,11 @@ func Shutdown() error {
 	if err != nil {
 		//TODO don't catch if this is an init error
 		log.Log.Println("Error while saving config:", err.Error())
+	}
+	shutUp = false
+
+	if err := exitCmd(); err != nil {
+		log.Log.Println("cmd exit error", err)
 	}
 
 	return err

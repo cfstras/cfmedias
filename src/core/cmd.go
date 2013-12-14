@@ -1,8 +1,8 @@
 package core
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/peterh/liner"
 	"log"
 	"os"
 	"strings"
@@ -17,20 +17,34 @@ type Command struct {
 // inits the cmd subsystem
 func initCmd() {
 	commandMap = make(map[string]Command)
+	commandSet = make(map[string]Command)
 	registerBaseCommands()
 }
 
-func exitCmd() {
-	runCmdLine = false
-	os.Stdin.Close()
+// exits the cmd line
+func exitCmd() error {
+	replActive = false
+	err := os.Stdin.Close()
+	if err != nil {
+		fmt.Println("close error", err)
+	}
+	if reading {
+		fmt.Println("Press any key...")
+	}
+	return repl.Close()
 }
 
 // stores the loaded commands, sorted by verb.
 // multiple verbs may point to the same command.
 var commandMap map[string]Command
 
-// whether the cmd line is currently active
-var runCmdLine bool
+// stores the loaded commands, sorted by first verb
+var commandSet map[string]Command
+
+// the REPL state
+var repl *liner.State
+var replActive bool
+var reading bool
 
 // add a command to the list of available commands
 func RegisterCommand(command Command) {
@@ -45,6 +59,7 @@ func RegisterCommand(command Command) {
 	for _, verb := range command.verbs {
 		commandMap[verb] = command
 	}
+	commandSet[command.verbs[0]] = command
 }
 
 // remove a command from the available list
@@ -52,6 +67,7 @@ func UnregisterCommand(command Command) {
 	for _, verb := range command.verbs {
 		delete(commandMap, verb)
 	}
+	delete(commandSet, command.verbs[0])
 }
 
 func registerBaseCommands() {
@@ -63,46 +79,60 @@ func registerBaseCommands() {
 		}}
 	RegisterCommand(quit)
 
+	help := Command{
+		[]string{"help", "h", "?"},
+		"Prints help.",
+		func(_ []string) {
+			fmt.Println("Available commands:")
+			for k, v := range commandSet {
+				fmt.Println(" ", k, "-", v.help)
+			}
+		}}
+	RegisterCommand(help)
 }
 
 // start a REPL shell.
 func CmdLine() {
 	log.Println("cfmedias", currentVersion)
 
-	runCmdLine = true
-	readBuffer := make([]byte, 1)
-	var buffer bytes.Buffer
+	repl = liner.NewLiner()
+	repl.SetCompleter(completer)
 
-	for runCmdLine {
-		fmt.Print("> ")
-		buffer.Reset()
-		readBuffer[0] = 0
-		for readBuffer[0] != '\n' {
-			n, err := os.Stdin.Read(readBuffer)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			if n != 1 {
-				fmt.Println("read error!,", readBuffer[0])
-				continue
-			}
-			if readBuffer[0] != '\n' && readBuffer[0] != '\r' {
-				buffer.WriteByte(readBuffer[0])
-			}
+	for replActive = true; replActive; {
+		reading = true
+		cmd, err := repl.Prompt("> ")
+		reading = false
+		if err != nil && replActive {
+			fmt.Println(err)
+			replActive = false
+			break
 		}
-		cmd := buffer.String()
-		// Parse!
+		if !replActive {
+			return
+		}
 		split := strings.Split(cmd, " ")
-		if len(split) > 0 {
+
+		if len(split) > 0 && len(cmd) > 0 {
 			command, ok := commandMap[split[0]]
 			if !ok {
 				fmt.Println("Error: no command for", split[0])
 				continue
 			}
+			repl.AppendHistory(cmd)
 			command.handler(split[1:])
 		}
 	}
+}
+
+func completer(s string) []string {
+	out := make([]string, 0)
+	// walk cmd map
+	for k, _ := range commandMap {
+		if strings.HasPrefix(k, s) {
+			out = append(out, k)
+		}
+	}
+	return out
 }
 
 func parseQuoted(s string) string {
