@@ -4,9 +4,12 @@ import (
 	"config"
 	"db"
 	log "logger"
+	"os"
+	"os/signal"
 )
 
 var shutUp bool
+var signals chan os.Signal
 
 func Start() error {
 
@@ -15,6 +18,17 @@ func Start() error {
 	if err != nil {
 		return err
 	}
+
+	// set up signal handler
+	signals = make(chan os.Signal, 2)
+	signal.Notify(signals, os.Interrupt, os.Kill)
+	go func() {
+		for _ = range signals {
+			// interrupted!
+			Shutdown()
+		}
+	}()
+
 	// connect to db
 	if err = db.Open(); err != nil {
 		return err
@@ -26,7 +40,7 @@ func Start() error {
 	//TODO call plugin loads
 
 	// update local files
-	db.Update()
+	go db.Update()
 
 	return nil
 }
@@ -35,6 +49,8 @@ func Shutdown() error {
 	if !shutUp {
 		return nil
 	}
+
+	exitCmd()
 
 	shutUp = false
 	log.Log.Println("shutting down.")

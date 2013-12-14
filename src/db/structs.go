@@ -15,7 +15,7 @@ type Item struct {
 	AlbumId uint64 `db:"album_id"`
 
 	Added          uint64  `db:"added_date"`
-	Rating         float32 `db:"rating_complex"` //TODO define fancy math around this
+	Rating         float32 `db:"rating"` //TODO define fancy math around this
 	PlayCount      uint32  `db:"play_count"`
 	ScrobbledCount uint32  `db:"scrobbled_count"`
 	SkipCount      uint32  `db:"skip_count"`
