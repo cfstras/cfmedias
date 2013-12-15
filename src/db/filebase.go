@@ -6,6 +6,7 @@ import (
 	log "logger"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 	"taglib"
@@ -38,12 +39,14 @@ func Update() {
 	up := &updater{tx}
 	err = filepath.Walk(path, up.step)
 	if err != nil {
-		log.Log.Println(err)
-	}
-
-	if err = up.tx.Commit(); err != nil {
+		log.Log.Println("Updater error:", err)
+		if err = up.tx.Commit(); err != nil {
+			log.Log.Println("rollback error:", err)
+		}
+	} else if err = up.tx.Commit(); err != nil {
 		log.Log.Println("Updater error:", err)
 	}
+	log.Log.Println("Filebase updated.")
 }
 
 func (up *updater) step(file string, info os.FileInfo, err error) error {
@@ -61,30 +64,59 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 		}
 		filepath.Walk(linked, up.step)
 	} else {
-		log.Log.Println(file)
-		up.analyze(file)
+		//log.Log.Println("at", file)
+		if err := up.analyze(file, path.Dir(file), info.Name()); err != nil {
+			log.Log.Println("analyze error", err)
+			return err
+		}
 	}
 	return nil
 }
 
-func (up *updater) analyze(file string) {
-	tag, err := taglib.Read(file)
+func (up *updater) analyze(path string, parent string, file string) error {
+	// check if we already did this one
+	itemPath := ItemPathView{}
+	if err := up.tx.SelectOne(&itemPath,
+		`select item_id Id, filename Filename, path Path
+		from `+ItemTable+`
+		natural join `+FolderTable+`
+		where filename = ?
+		and path = ?`,
+		file, parent); err != nil {
+		return err
+	}
+	if itemPath.Id != 0 {
+		// this one is already in the db
+		//TODO check if the tags have changed anyway
+		return nil
+	}
+
+	tag, err := taglib.Read(path)
 	if err != nil {
-		log.Log.Println("error reading file", file, "-", err)
-		return
+		if strings.HasSuffix(file, "png") || strings.HasSuffix(file, "jpg") {
+			return nil //TODO do something with the covers
+		}
+		log.Log.Println("error reading file", path, "-", err)
+		return nil
 	}
 
 	item := &Item{
 		Title:       tag.Title(),
 		Artist:      tag.Artist(),
+		AlbumArtist: "",
+		Album:       tag.Album(),
 		Genre:       tag.Genre(),
-		TrackNumber: uint32(tag.Track())}
+		TrackNumber: uint32(tag.Track()),
+		Folder:      &Folder{Path: parent},
+		Filename:    file,
+	}
 
-	//TODO get album, folder, added, check ID etc
+	//TODO get album, check ID etc
 
 	if err = up.tx.Insert(item); err != nil {
 		log.Log.Println("error inserting item", item, err)
-		return
+		return err
 	}
 	log.Log.Println("inserted", item)
+	return nil
 }

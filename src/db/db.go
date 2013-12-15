@@ -22,7 +22,7 @@ func Open() error {
 	}
 
 	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-	dbmap.TraceOn("[db]", log.Log)
+	//dbmap.TraceOn("[db]", log.Log)
 
 	if err := checkTables(); err != nil {
 		return err
@@ -83,9 +83,9 @@ func checkTables() error {
 	}
 	res.Close()
 
-	dbmap.AddTableWithName(Item{}, "items").SetKeys(true, "Id")
-	dbmap.AddTableWithName(Album{}, "albums").SetKeys(true, "Id")
-	dbmap.AddTableWithName(Folder{}, "folders").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Item{}, ItemTable).SetKeys(true, "Id")
+	//dbmap.AddTableWithName(Album{}, "albums").SetKeys(true, "Id")
+	dbmap.AddTableWithName(Folder{}, FolderTable).SetKeys(true, "Id")
 
 	err = dbmap.CreateTablesIfNotExists()
 	if err != nil {
