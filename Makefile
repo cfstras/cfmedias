@@ -2,6 +2,7 @@
 #TODO add .exe on windows boxen
 
 GOPATH := $(CURDIR)
+export GOPATH
 
 all: build
 
