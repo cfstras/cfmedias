@@ -1,9 +1,10 @@
 package core
 
 import (
+	"db"
 	"fmt"
 	"github.com/peterh/liner"
-	"log"
+	log "logger"
 	"os"
 	"strings"
 )
@@ -73,15 +74,14 @@ func UnregisterCommand(command Command) {
 }
 
 func registerBaseCommands() {
-	quit := Command{
+	RegisterCommand(Command{
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
 		func(_ []string) {
 			Shutdown()
-		}}
-	RegisterCommand(quit)
+		}})
 
-	help := Command{
+	RegisterCommand(Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
 		func(_ []string) {
@@ -89,13 +89,28 @@ func registerBaseCommands() {
 			for k, v := range commandSet {
 				fmt.Println(" ", k, "-", v.help)
 			}
-		}}
-	RegisterCommand(help)
+		}})
+
+	RegisterCommand(Command{
+		[]string{"rescan"},
+		"Refreshes the database by re-scanning the music folder.",
+		func(_ []string) {
+			db.Update()
+		}})
+
+	RegisterCommand(Command{
+		[]string{"stats"},
+		"Prints some statistics about the database",
+		func(_ []string) {
+			fmt.Printf(" %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
+			fmt.Printf(" %7d %7d %7f\n", db.TitlesTotal(), db.FoldersTotal(),
+				db.AvgFilesPerFolder())
+		}})
 }
 
 // start a REPL shell.
 func CmdLine() {
-	log.Println("cfmedias", currentVersion)
+	log.Log.Println("cfmedias", currentVersion)
 
 	repl = liner.NewLiner()
 	repl.SetCompleter(completer)
