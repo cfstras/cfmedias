@@ -4,10 +4,12 @@ import (
 	"errors"
 )
 
+type ArgMap map[string][]string
+
 type Command struct {
 	Verbs   []string
 	Help    string
-	Handler func(args []string) error
+	Handler func(args ArgMap) error
 }
 
 var (
@@ -22,5 +24,5 @@ type Core interface {
 	RegisterCommand(Command)
 	UnregisterCommand(Command)
 	CmdLine()
-	Cmd(cmd string, args []string) error
+	Cmd(cmd string, args ArgMap) error
 }
