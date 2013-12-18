@@ -60,14 +60,14 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
-		func(_ []string) error {
+		func(_ core.ArgMap) error {
 			return c.Shutdown()
 		}})
 
 	c.RegisterCommand(core.Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
-		func(_ []string) error {
+		func(_ core.ArgMap) error {
 			fmt.Println("Available commands:")
 			for k, v := range c.commandSet {
 				fmt.Println(" ", k, "-", v.Help)
@@ -78,7 +78,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
 		"Refreshes the database by re-scanning the music folder.",
-		func(_ []string) error {
+		func(_ core.ArgMap) error {
 			db.Update()
 			return nil
 		}})
@@ -86,7 +86,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"stats"},
 		"Prints some statistics about the database",
-		func(_ []string) error {
+		func(_ core.ArgMap) error {
 			fmt.Printf(" %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
 			fmt.Printf(" %7d %7d %7f\n", db.TitlesTotal(), db.FoldersTotal(),
 				db.AvgFilesPerFolder())
@@ -116,6 +116,19 @@ func (c *impl) CmdLine() {
 		split := strings.Split(cmd, " ")
 
 		if len(split) > 0 && len(cmd) > 0 {
+			args := make(core.ArgMap)
+			for _, e := range split[1:] {
+				tuple := strings.Split(e, "=")
+				if _, ok := args[tuple[0]]; !ok {
+					args[tuple[0]] = make([]string)
+				}
+				if len(tuple) > 0 {
+					args[tuple[0]] = append(args[tuple[0]],
+						strings.Join(tuple[1:], "="))
+					//TODO check yo self before you wreck yo self
+				}
+			}
+
 			err = c.Cmd(split[0], split[1:])
 			if err != nil {
 				log.Log.Println(err)
@@ -126,7 +139,7 @@ func (c *impl) CmdLine() {
 	}
 }
 
-func (c *impl) Cmd(cmd string, args []string) error {
+func (c *impl) Cmd(cmd string, args core.ArgMap) error {
 	command, ok := c.commandMap[cmd]
 	if !ok {
 		return core.ErrorCmdNotFound

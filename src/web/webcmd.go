@@ -12,21 +12,27 @@ type NetCmdLine struct {
 	core core.Core
 }
 
-func (n *NetCmdLine) getCmd(r *http.Request) (cmd string, args []string) {
+func (n *NetCmdLine) getCmd(r *http.Request) (err error, cmd string, args core.ArgMap) {
 	path := r.URL.Path[1:]
 	parts := strings.Split(path, "/")
-	return parts[1], parts[2:]
+	// ignore parts[2:]
+	if err := r.ParseForm(); err != nil {
+		return err, "", nil
+	}
+
+	return nil, parts[1], core.ArgMap(r.Form)
 }
 
 func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
-	cmd, args := n.getCmd(r)
-
-	//fmt.Fprintf(w, "You're at /api/%s!\n", cmd)
-	//fmt.Fprintln(w, "args:", args)
-	err := n.core.Cmd(cmd, args)
+	err, cmd, args := n.getCmd(r)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = n.core.Cmd(cmd, args); err != nil {
 		if err == core.ErrorCmdNotFound {
-			http.NotFound(w, r)
+			http.Error(w, "Command not found", 404)
 			return
 		}
 		http.Error(w, err.Error(), 500)
