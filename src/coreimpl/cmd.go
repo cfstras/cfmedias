@@ -5,6 +5,7 @@ import (
 	"db"
 	"fmt"
 	"github.com/peterh/liner"
+	"io"
 	log "logger"
 	"os"
 	"strings"
@@ -60,35 +61,36 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
-		func(_ core.ArgMap) error {
+		func(_ core.ArgMap, _ io.Writer) error {
 			return c.Shutdown()
 		}})
 
 	c.RegisterCommand(core.Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
-		func(_ core.ArgMap) error {
-			fmt.Println("Available commands:")
+		func(_ core.ArgMap, w io.Writer) error {
+			fmt.Fprintln(w, "Available commands:")
 			for k, v := range c.commandSet {
-				fmt.Println(" ", k, "-", v.Help)
+				fmt.Fprintln(w, " ", k, "-", v.Help)
 			}
 			return nil
 		}})
 
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
-		"Refreshes the database by re-scanning the music folder.",
-		func(_ core.ArgMap) error {
-			db.Update()
+		"Refreshes the database by re-scanning the media folder.",
+		func(_ core.ArgMap, w io.Writer) error {
+			fmt.Fprintln(w, "Rescanning media folder...")
+			go db.Update()
 			return nil
 		}})
 
 	c.RegisterCommand(core.Command{
 		[]string{"stats"},
 		"Prints some statistics about the database",
-		func(_ core.ArgMap) error {
-			fmt.Printf(" %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
-			fmt.Printf(" %7d %7d %7f\n", db.TitlesTotal(), db.FoldersTotal(),
+		func(_ core.ArgMap, w io.Writer) error {
+			fmt.Fprintf(w, " %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
+			fmt.Fprintf(w, " %7d %7d %7f\n", db.TitlesTotal(), db.FoldersTotal(),
 				db.AvgFilesPerFolder())
 			return nil
 		}})
@@ -104,6 +106,7 @@ func (c *impl) CmdLine() {
 	for c.replActive = true; c.replActive; {
 		c.reading = true
 		cmd, err := c.repl.Prompt("> ")
+		//c.repl.Close()
 		c.reading = false
 		if err != nil && c.replActive {
 			fmt.Println(err)
@@ -116,20 +119,22 @@ func (c *impl) CmdLine() {
 		split := strings.Split(cmd, " ")
 
 		if len(split) > 0 && len(cmd) > 0 {
+			// convert arg list to map, using format
+			// name=max fruits=apple fruits=orange
+			// ==> map[name: [max], fruits: [apple, orange]]
 			args := make(core.ArgMap)
 			for _, e := range split[1:] {
 				tuple := strings.Split(e, "=")
 				if _, ok := args[tuple[0]]; !ok {
-					args[tuple[0]] = make([]string)
+					args[tuple[0]] = make([]string, 0)
 				}
 				if len(tuple) > 0 {
 					args[tuple[0]] = append(args[tuple[0]],
 						strings.Join(tuple[1:], "="))
-					//TODO check yo self before you wreck yo self
 				}
 			}
 
-			err = c.Cmd(split[0], split[1:])
+			err = c.Cmd(split[0], args, os.Stdout)
 			if err != nil {
 				log.Log.Println(err)
 			} else {
@@ -139,13 +144,13 @@ func (c *impl) CmdLine() {
 	}
 }
 
-func (c *impl) Cmd(cmd string, args core.ArgMap) error {
+func (c *impl) Cmd(cmd string, args core.ArgMap, w io.Writer) error {
 	command, ok := c.commandMap[cmd]
 	if !ok {
 		return core.ErrorCmdNotFound
 	}
 
-	return command.Handler(args)
+	return command.Handler(args, w)
 }
 
 func (c *impl) completer(s string) []string {

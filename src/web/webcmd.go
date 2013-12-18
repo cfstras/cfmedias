@@ -30,7 +30,7 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = n.core.Cmd(cmd, args); err != nil {
+	if err = n.core.Cmd(cmd, args, w); err != nil {
 		if err == core.ErrorCmdNotFound {
 			http.Error(w, "Command not found", 404)
 			return
