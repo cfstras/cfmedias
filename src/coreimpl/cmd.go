@@ -61,6 +61,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
+		core.AuthRoot,
 		func(_ core.ArgMap, _ io.Writer) error {
 			return c.Shutdown()
 		}})
@@ -68,6 +69,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
+		core.AuthGuest,
 		func(_ core.ArgMap, w io.Writer) error {
 			fmt.Fprintln(w, "Available commands:")
 			for k, v := range c.commandSet {
@@ -79,6 +81,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
 		"Refreshes the database by re-scanning the media folder.",
+		core.AuthAdmin,
 		func(_ core.ArgMap, w io.Writer) error {
 			fmt.Fprintln(w, "Rescanning media folder...")
 			go db.Update()
@@ -88,6 +91,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"stats"},
 		"Prints some statistics about the database",
+		core.AuthUser,
 		func(_ core.ArgMap, w io.Writer) error {
 			fmt.Fprintf(w, " %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
 			fmt.Fprintf(w, " %7d %7d %7f\n", db.TitlesTotal(), db.FoldersTotal(),
@@ -134,7 +138,7 @@ func (c *impl) CmdLine() {
 				}
 			}
 
-			err = c.Cmd(split[0], args, os.Stdout)
+			err = c.Cmd(split[0], args, os.Stdout, core.AuthRoot)
 			if err != nil {
 				log.Log.Println(err)
 			} else {
@@ -144,10 +148,13 @@ func (c *impl) CmdLine() {
 	}
 }
 
-func (c *impl) Cmd(cmd string, args core.ArgMap, w io.Writer) error {
+func (c *impl) Cmd(cmd string, args core.ArgMap, w io.Writer, level core.AuthLevel) error {
 	command, ok := c.commandMap[cmd]
 	if !ok {
 		return core.ErrorCmdNotFound
+	}
+	if level <= command.MinAuthLevel {
+		return core.ErrorNotAllowed
 	}
 
 	return command.Handler(args, w)
