@@ -1,7 +1,7 @@
 package main
 
 import (
-	"core"
+	"coreimpl"
 	"log"
 	"os"
 )
@@ -12,11 +12,13 @@ func main() {
 
 	// start engine
 	log.Println("Starting cfmedias")
-	err := core.Start()
+
+	inst := coreimpl.New()
+	err := inst.Start()
 
 	if err != nil {
 		log.Println("Caught an error:", err.Error(), "- exiting...")
-		err = core.Shutdown()
+		err = inst.Shutdown()
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -25,12 +27,12 @@ func main() {
 	//go sineLogon()
 
 	// listen for commands
-	core.CmdLine()
+	inst.CmdLine()
 
 	// CmdLine is finished, shutdown
 	log.Println("Exiting...")
 
-	if err = core.Shutdown(); err != nil {
+	if err = inst.Shutdown(); err != nil {
 		log.Println(err.Error())
 	}
 }

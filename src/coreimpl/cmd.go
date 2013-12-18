@@ -1,8 +1,8 @@
-package core
+package coreimpl
 
 import (
+	"core"
 	"db"
-	"errors"
 	"fmt"
 	"github.com/peterh/liner"
 	log "logger"
@@ -10,25 +10,19 @@ import (
 	"strings"
 )
 
-type Command struct {
-	Verbs   []string
-	Help    string
-	Handler func(args []string) error
-}
-
 // inits the cmd subsystem
-func initCmd() {
-	CommandMap = make(map[string]Command)
-	CommandSet = make(map[string]Command)
-	registerBaseCommands()
+func (c *impl) initCmd() {
+	c.commandMap = make(map[string]core.Command)
+	c.commandSet = make(map[string]core.Command)
+	c.registerBaseCommands()
 }
 
 // exits the cmd line
-func exitCmd() error {
-	replActive = false
-	repl.Close()
+func (c *impl) exitCmd() error {
+	c.replActive = false
+	c.repl.Close()
 
-	if reading {
+	if c.reading {
 		fmt.Println("Press enter to continue...")
 	}
 	err := os.Stdin.Close()
@@ -38,22 +32,10 @@ func exitCmd() error {
 	return nil
 }
 
-// stores the loaded commands, sorted by verb.
-// multiple verbs may point to the same command.
-var CommandMap map[string]Command
-
-// stores the loaded commands, sorted by first verb
-var CommandSet map[string]Command
-
-// the REPL state
-var repl *liner.State
-var replActive bool
-var reading bool
-
 // add a command to the list of available commands
-func RegisterCommand(command Command) {
+func (c *impl) RegisterCommand(command core.Command) {
 	for _, verb := range command.Verbs {
-		old, already := CommandMap[verb]
+		old, already := c.commandMap[verb]
 		if already {
 			fmt.Println("error registering verb", verb, `for command "`,
 				command.Help, `", it already exists with command "`, old.Help, `".`)
@@ -61,39 +43,39 @@ func RegisterCommand(command Command) {
 		}
 	}
 	for _, verb := range command.Verbs {
-		CommandMap[verb] = command
+		c.commandMap[verb] = command
 	}
-	CommandSet[command.Verbs[0]] = command
+	c.commandSet[command.Verbs[0]] = command
 }
 
 // remove a command from the available list
-func UnregisterCommand(command Command) {
+func (c *impl) UnregisterCommand(command core.Command) {
 	for _, verb := range command.Verbs {
-		delete(CommandMap, verb)
+		delete(c.commandMap, verb)
 	}
-	delete(CommandSet, command.Verbs[0])
+	delete(c.commandSet, command.Verbs[0])
 }
 
-func registerBaseCommands() {
-	RegisterCommand(Command{
+func (c *impl) registerBaseCommands() {
+	c.RegisterCommand(core.Command{
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
 		func(_ []string) error {
-			return Shutdown()
+			return c.Shutdown()
 		}})
 
-	RegisterCommand(Command{
+	c.RegisterCommand(core.Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
 		func(_ []string) error {
 			fmt.Println("Available commands:")
-			for k, v := range CommandSet {
+			for k, v := range c.commandSet {
 				fmt.Println(" ", k, "-", v.Help)
 			}
 			return nil
 		}})
 
-	RegisterCommand(Command{
+	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
 		"Refreshes the database by re-scanning the music folder.",
 		func(_ []string) error {
@@ -101,7 +83,7 @@ func registerBaseCommands() {
 			return nil
 		}})
 
-	RegisterCommand(Command{
+	c.RegisterCommand(core.Command{
 		[]string{"stats"},
 		"Prints some statistics about the database",
 		func(_ []string) error {
@@ -113,50 +95,50 @@ func registerBaseCommands() {
 }
 
 // start a REPL shell.
-func CmdLine() {
-	log.Log.Println("cfmedias", currentVersion)
+func (c *impl) CmdLine() {
+	log.Log.Println("cfmedias", c.currentVersion)
 
-	repl = liner.NewLiner()
-	repl.SetCompleter(completer)
+	c.repl = liner.NewLiner()
+	c.repl.SetCompleter(c.completer)
 
-	for replActive = true; replActive; {
-		reading = true
-		cmd, err := repl.Prompt("> ")
-		reading = false
-		if err != nil && replActive {
+	for c.replActive = true; c.replActive; {
+		c.reading = true
+		cmd, err := c.repl.Prompt("> ")
+		c.reading = false
+		if err != nil && c.replActive {
 			fmt.Println(err)
-			replActive = false
+			c.replActive = false
 			break
 		}
-		if !replActive {
+		if !c.replActive {
 			return
 		}
 		split := strings.Split(cmd, " ")
 
 		if len(split) > 0 && len(cmd) > 0 {
-			err = Cmd(split[0], split[1:])
+			err = c.Cmd(split[0], split[1:])
 			if err != nil {
 				log.Log.Println(err)
 			} else {
-				repl.AppendHistory(cmd)
+				c.repl.AppendHistory(cmd)
 			}
 		}
 	}
 }
 
-func Cmd(cmd string, args []string) error {
-	command, ok := CommandMap[cmd]
+func (c *impl) Cmd(cmd string, args []string) error {
+	command, ok := c.commandMap[cmd]
 	if !ok {
-		return errors.New("Error: no command for " + cmd)
+		return core.ErrorCmdNotFound
 	}
 
 	return command.Handler(args)
 }
 
-func completer(s string) []string {
+func (c *impl) completer(s string) []string {
 	out := make([]string, 0)
 	// walk cmd map
-	for k, _ := range CommandMap {
+	for k, _ := range c.commandMap {
 		if strings.HasPrefix(k, s) {
 			out = append(out, k)
 		}
