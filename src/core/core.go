@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"io"
 )
 
 type ArgMap map[string][]string
@@ -9,7 +10,7 @@ type ArgMap map[string][]string
 type Command struct {
 	Verbs   []string
 	Help    string
-	Handler func(args ArgMap) error
+	Handler func(args ArgMap, w io.Writer) error
 }
 
 var (
@@ -24,5 +25,5 @@ type Core interface {
 	RegisterCommand(Command)
 	UnregisterCommand(Command)
 	CmdLine()
-	Cmd(cmd string, args ArgMap) error
+	Cmd(cmd string, args ArgMap, w io.Writer) error
 }
