@@ -6,6 +6,7 @@ import (
 	log "logger"
 	"os"
 	"os/signal"
+	"web"
 )
 
 var shutUp bool
@@ -38,6 +39,9 @@ func Start() error {
 	initCmd()
 
 	//TODO call plugin loads
+
+	// start web
+	go web.NetCmdLine()
 
 	// update local files
 	go db.Update()

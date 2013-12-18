@@ -16,6 +16,11 @@ type updater struct {
 	tx *gorp.Transaction
 }
 
+var IgnoredTypes = []string{
+	"jpg", "jpeg", "png", "gif",
+	"nfo", "m3u", "log", "sfv", "txt",
+	"cue"}
+
 func Update() {
 	// keep file base up to date
 	path := config.Current.MediaPath
@@ -93,8 +98,10 @@ func (up *updater) analyze(path string, parent string, file string) error {
 
 	tag, err := taglib.Read(path)
 	if err != nil {
-		if strings.HasSuffix(file, "png") || strings.HasSuffix(file, "jpg") {
-			return nil //TODO do something with the covers
+		for _, v := range IgnoredTypes {
+			if strings.HasSuffix(file, v) {
+				return nil //TODO do something with the covers
+			}
 		}
 		log.Log.Println("error reading file", path, "-", err)
 		return nil

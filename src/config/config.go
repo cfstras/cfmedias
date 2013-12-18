@@ -10,21 +10,25 @@ import (
 type Configuration struct {
 	DbFile    string
 	MediaPath string
+	WebPort   uint
 }
 
 var Current *Configuration
+var Default *Configuration
 
 // Initializes the config with standard parameters
 func Init() {
 	log.Println("Initializing new configuation.")
-	Current = &Configuration{
+	Default = &Configuration{
 		DbFile:    "db.sqlite",
 		MediaPath: "~/Music",
+		WebPort:   38888,
 	}
+	Current = Default
 }
 
 func Load(configFile string) error {
-	if Current != nil {
+	if Current != nil && Current != Default {
 		return errors.New("Config already loaded.")
 	}
 
