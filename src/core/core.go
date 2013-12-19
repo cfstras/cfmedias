@@ -34,6 +34,9 @@ type Command struct {
 var (
 	ErrorCmdNotFound = errors.New("Command not found!")
 	ErrorNotAllowed  = errors.New("You are not allowed to do that!")
+
+	ErrorItemNotFound   = errors.New("The requested item was not found.")
+	ErrorQueryAmbiguous = errors.New("Parameters are not accurate enough.")
 )
 
 type Core interface {
