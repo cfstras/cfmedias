@@ -2,7 +2,6 @@ package coreimpl
 
 import (
 	"core"
-	"db"
 	"fmt"
 	"github.com/peterh/liner"
 	"io"
@@ -78,26 +77,6 @@ func (c *impl) registerBaseCommands() {
 			return nil
 		}})
 
-	c.RegisterCommand(core.Command{
-		[]string{"rescan"},
-		"Refreshes the database by re-scanning the media folder.",
-		core.AuthAdmin,
-		func(_ core.ArgMap, w io.Writer) error {
-			fmt.Fprintln(w, "Rescanning media folder...")
-			go db.Update()
-			return nil
-		}})
-
-	c.RegisterCommand(core.Command{
-		[]string{"stats"},
-		"Prints some statistics about the database",
-		core.AuthUser,
-		func(_ core.ArgMap, w io.Writer) error {
-			fmt.Fprintf(w, " %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
-			fmt.Fprintf(w, " %7d %7d %7f\n", db.TitlesTotal(), db.FoldersTotal(),
-				db.AvgFilesPerFolder())
-			return nil
-		}})
 }
 
 // start a REPL shell.
@@ -153,7 +132,7 @@ func (c *impl) Cmd(cmd string, args core.ArgMap, w io.Writer, level core.AuthLev
 	if !ok {
 		return core.ErrorCmdNotFound
 	}
-	if level <= command.MinAuthLevel {
+	if level < command.MinAuthLevel {
 		return core.ErrorNotAllowed
 	}
 
