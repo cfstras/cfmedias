@@ -21,7 +21,7 @@ var IgnoredTypes = []string{
 	"nfo", "m3u", "log", "sfv", "txt",
 	"cue"}
 
-func Update() {
+func (d *DB) Update() {
 	// keep file base up to date
 	path := config.Current.MediaPath
 	if strings.Contains(path, "~") {
@@ -36,7 +36,7 @@ func Update() {
 		log.Log.Println("Error: Music path", path, "does not exist!")
 		return
 	}
-	tx, err := dbmap.Begin()
+	tx, err := d.dbmap.Begin()
 	if err != nil {
 		log.Log.Println("Could not start db transaction")
 		return

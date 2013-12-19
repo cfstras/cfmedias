@@ -27,6 +27,8 @@ type impl struct {
 	repl       *liner.State
 	replActive bool
 	reading    bool
+
+	db *db.DB
 }
 
 func New() core.Core {
@@ -52,13 +54,14 @@ func (c *impl) Start() error {
 		}
 	}()
 
+	c.initCmd()
+
+	c.db = new(db.DB)
 	// connect to db
-	if err = db.Open(); err != nil {
+	if err = c.db.Open(c); err != nil {
 		return err
 	}
 	c.shutUp = true
-
-	c.initCmd()
 
 	//TODO call plugin loads
 
@@ -67,7 +70,7 @@ func (c *impl) Start() error {
 	go net.Start(c)
 
 	// update local files
-	go db.Update()
+	go c.db.Update()
 
 	return nil
 }
@@ -80,7 +83,7 @@ func (c *impl) Shutdown() error {
 	log.Log.Println("shutting down.")
 
 	// disconnect from db
-	if err := db.Close(); err != nil {
+	if err := c.db.Close(); err != nil {
 		log.Log.Println("Error closing database:", err)
 	}
 
