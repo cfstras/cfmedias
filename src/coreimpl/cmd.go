@@ -79,6 +79,8 @@ func (c *impl) registerBaseCommands() {
 
 }
 
+const maxUnicodeString = "\U0010FFFF"
+
 // start a REPL shell.
 func (c *impl) CmdLine() {
 	log.Log.Println("cfmedias", c.currentVersion)
@@ -99,6 +101,9 @@ func (c *impl) CmdLine() {
 		if !c.replActive {
 			return
 		}
+
+		cmd = strings.Replace(cmd, `\ `, maxUnicodeString, -1)
+		cmd = strings.Replace(cmd, `\\`, `\`, -1)
 		split := strings.Split(cmd, " ")
 
 		if len(split) > 0 && len(cmd) > 0 {
@@ -107,6 +112,7 @@ func (c *impl) CmdLine() {
 			// ==> map[name: [max], fruits: [apple, orange]]
 			args := make(core.ArgMap)
 			for _, e := range split[1:] {
+				e = strings.Replace(e, maxUnicodeString, ` `, -1)
 				tuple := strings.Split(e, "=")
 				if _, ok := args[tuple[0]]; !ok {
 					args[tuple[0]] = make([]string, 0)
@@ -118,10 +124,11 @@ func (c *impl) CmdLine() {
 			}
 
 			err = c.Cmd(split[0], args, os.Stdout, core.AuthRoot)
+			if err != core.ErrorCmdNotFound {
+				c.repl.AppendHistory(cmd)
+			}
 			if err != nil {
 				log.Log.Println(err)
-			} else {
-				c.repl.AppendHistory(cmd)
 			}
 		}
 	}

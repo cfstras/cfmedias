@@ -9,5 +9,5 @@ var Log *log.Logger
 
 func init() {
 	// open logger
-	Log = log.New(os.Stdout, "", log.Lshortfile|log.Ltime)
+	Log = log.New(os.Stdout, "" /*log.Lshortfile|*/, log.Ltime)
 }

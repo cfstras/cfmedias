@@ -51,7 +51,7 @@ type Item struct {
 	//
 	// When a track is listened and scored positively, this is incremented
 	// and a scrobble is sent to the service.
-	ScrobbledCount uint32 `db:"scrobbled_count"`
+	ScrobbleCount uint32 `db:"scrobbled_count"`
 }
 
 type Folder struct {

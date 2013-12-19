@@ -16,6 +16,14 @@ const (
 	ParamBool
 )
 
+func (db *DB) initLogic(c core.Core) {
+	c.RegisterCommand(core.Command{
+		[]string{"trackplayed"},
+		"Inserts a track play into the database",
+		core.AuthUser,
+		db.TrackPlayed})
+}
+
 func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 	// check if necessary args are there
 	var err error
@@ -37,7 +45,7 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 		return err
 	}
 
-	qArgs := []*string{title, artist} // never nil, because force is true for them
+	qArgs := []interface{}{title, artist} // never nil, because force is true for them
 
 	q := `select * from ` + ItemTable + `
 		where title = ? and artist = ? `
@@ -56,16 +64,17 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 
 	// get track info
 	//TODO get DB write lock!
-	tracks, err := db.dbmap.Select(Item{}, q, qArgs)
+	tracks, err := db.dbmap.Select(Item{}, q, qArgs...)
 	if err != nil {
 		return err
 	}
 
 	if len(tracks) == 0 {
 		//TODO insert track
+		fmt.Fprintln(w, "track:", qArgs)
 		return core.ErrorItemNotFound
 	}
-	if len(tracks) >= 0 {
+	if len(tracks) > 1 {
 		fmt.Fprintln(w, "Multiple tracks found! Please re-try with more "+
 			"accurate arguments.")
 		for _, t := range tracks {
@@ -74,12 +83,10 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 		return core.ErrorQueryAmbiguous
 	}
 
-	if tracks[0].(type) != *Item {
-		return errors.New("a;lsjfa;lskjfa;lskjf;alskjf")
-	}
-	track := *Item(tracks[0])
+	track := tracks[0].(*Item)
 
 	//DEBUG
+	//TODO return some actual data
 	fmt.Println("track found:", track)
 
 	// update stats
@@ -95,17 +102,19 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 		track.PlayScore += scoreAdd
 		track.ScoredCount++
 	}
-	if scrobbled {
+	if *scrobbled {
 		track.ScrobbleCount++
 	}
 
-	err := db.dbmap.Update(track)
+	rows, err := db.dbmap.Update(track)
 	if err != nil {
 		return err
 	}
+	if rows == 0 {
+		return errors.New("Row could not be updated")
+	}
 
-	//TODO
-	return errors.New("Not implemented")
+	return nil
 }
 
 // for single args
@@ -113,7 +122,7 @@ func getArg(args core.ArgMap, arg string, force bool, err error) (*string, error
 	if err != nil {
 		return nil, err
 	}
-	value, ok := args["title"]
+	value, ok := args[arg]
 	if !ok || len(value) == 0 {
 		if force {
 			return nil, errors.New("argument " + arg + " missing!")

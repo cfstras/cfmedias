@@ -44,6 +44,7 @@ func (d *DB) Open(c core.Core) error {
 	}
 
 	d.initStats(c)
+	d.initLogic(c)
 
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
