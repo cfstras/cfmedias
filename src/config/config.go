@@ -11,6 +11,9 @@ type Configuration struct {
 	DbFile    string
 	MediaPath string
 	WebPort   uint
+
+	ListenedUpperThreshold float32
+	ListenedLowerThreshold float32
 }
 
 var Current *Configuration
@@ -20,9 +23,11 @@ var Default *Configuration
 func Init() {
 	log.Println("Initializing new configuation.")
 	Default = &Configuration{
-		DbFile:    "db.sqlite",
-		MediaPath: "~/Music",
-		WebPort:   38888,
+		DbFile:                 "db.sqlite",
+		MediaPath:              "~/Music",
+		WebPort:                38888,
+		ListenedUpperThreshold: 0.7,
+		ListenedLowerThreshold: 0.3,
 	}
 	Current = Default
 }
