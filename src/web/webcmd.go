@@ -31,19 +31,20 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if result := n.core.Cmd(cmd, args, core.AuthGuest); err != nil {
-		if err == core.ErrorCmdNotFound {
-			http.Error(w, "Command not found", 404)
-			return
-		}
+	result := n.core.Cmd(cmd, args, core.AuthGuest)
+	fmt.Println(result)
+	if err == core.ErrorCmdNotFound {
+		http.Error(w, "Command not found", 404)
+		return
+	}
+	if bytes, err := json.MarshalIndent(result, "", "  "); err != nil {
 		http.Error(w, err.Error(), 500)
 	} else {
-		if str, err := json.MarshalIndent(result, "", "  "); err != nil {
-			http.Error(w, err.Error(), 500)
-		} else {
-			fmt.Fprint(w, str)
-		}
+		w.Write(bytes)
+		fmt.Fprintln(w)
 	}
+	//TODO errors are not marshaled correctly
+
 }
 
 func (n *NetCmdLine) Start(core core.Core) {
