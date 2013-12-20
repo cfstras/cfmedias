@@ -23,11 +23,17 @@ const (
 	AuthRoot
 )
 
+type CommandContext struct {
+	Cmd       string
+	Args      ArgMap
+	AuthLevel AuthLevel
+}
+
 type Command struct {
 	Verbs        []string
 	Help         string
 	MinAuthLevel AuthLevel
-	Handler      func(args ArgMap) Result
+	Handler      func(ctx CommandContext) Result
 }
 
 type Status string
@@ -70,5 +76,5 @@ type Core interface {
 	RegisterCommand(Command)
 	UnregisterCommand(Command)
 	CmdLine()
-	Cmd(cmd string, args ArgMap, level AuthLevel) Result
+	Cmd(ctx CommandContext) Result
 }

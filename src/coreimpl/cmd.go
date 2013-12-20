@@ -61,7 +61,7 @@ func (c *impl) registerBaseCommands() {
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
 		core.AuthRoot,
-		func(_ core.ArgMap) core.Result {
+		func(_ core.CommandContext) core.Result {
 			return core.ResultByError(c.Shutdown())
 		}})
 
@@ -69,10 +69,12 @@ func (c *impl) registerBaseCommands() {
 		[]string{"help", "h", "?"},
 		"Prints help.",
 		core.AuthGuest,
-		func(_ core.ArgMap) core.Result {
+		func(ctx core.CommandContext) core.Result {
 			res := make(map[string]interface{})
 			for k, v := range c.commandSet {
-				res[k] = v.Help
+				if ctx.AuthLevel >= v.MinAuthLevel {
+					res[k] = v.Help
+				}
 			}
 			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
@@ -123,7 +125,7 @@ func (c *impl) CmdLine() {
 				}
 			}
 
-			result := c.Cmd(split[0], args, core.AuthRoot)
+			result := c.Cmd(core.CommandContext{split[0], args, core.AuthRoot})
 			if result.Error != core.ErrorCmdNotFound {
 				c.repl.AppendHistory(cmd)
 			}
@@ -134,16 +136,17 @@ func (c *impl) CmdLine() {
 	}
 }
 
-func (c *impl) Cmd(cmd string, args core.ArgMap, level core.AuthLevel) core.Result {
-	command, ok := c.commandMap[cmd]
+func (c *impl) Cmd(ctx core.CommandContext) core.Result {
+
+	command, ok := c.commandMap[ctx.Cmd]
 	if !ok {
 		return core.ResultByError(core.ErrorCmdNotFound)
 	}
-	if level < command.MinAuthLevel {
+	if ctx.AuthLevel < command.MinAuthLevel {
 		return core.ResultByError(core.ErrorNotAllowed)
 	}
 
-	return command.Handler(args)
+	return command.Handler(ctx)
 }
 
 func (c *impl) completer(s string) []string {
