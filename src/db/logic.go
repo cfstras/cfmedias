@@ -4,8 +4,6 @@ import (
 	"config"
 	"core"
 	"errors"
-	"fmt"
-	"io"
 	"math"
 	"strconv"
 )
@@ -24,14 +22,9 @@ func (db *DB) initLogic(c core.Core) {
 		db.TrackPlayed})
 }
 
-func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
-	// check if necessary args are there
-	var err error
-	title, err := getArg(args, "title", true, err)
-	artist, err := getArg(args, "artist", true, err)
-	album, err := getArg(args, "album", false, err)
-	album_artist, err := getArg(args, "album_artist", false, err)
-	musicbrainz_id, err := getArg(args, "musicbrainz_id", false, err)
+func (db *DB) TrackPlayed(args core.ArgMap) core.Result {
+
+	tracks, err := db.GetItem(args)
 
 	lengthS, err := getArg(args, "length", true, err)
 	length_playedS, err := getArg(args, "length_played", true, err)
@@ -42,52 +35,18 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 	scrobbled, err := castBool(scrobbledS, err)
 
 	if err != nil {
-		return err
-	}
-
-	qArgs := []interface{}{title, artist} // never nil, because force is true for them
-
-	q := `select * from ` + ItemTable + `
-		where title = ? and artist = ? `
-	if album != nil {
-		q += `and album = ? `
-		qArgs = append(qArgs, album)
-	}
-	if album_artist != nil {
-		q += `and album_artist = ? `
-		qArgs = append(qArgs, album_artist)
-	}
-	if musicbrainz_id != nil {
-		q += `and musicbrainz_id = ? `
-		qArgs = append(qArgs, musicbrainz_id)
-	}
-
-	// get track info
-	//TODO get DB write lock!
-	tracks, err := db.dbmap.Select(Item{}, q, qArgs...)
-	if err != nil {
-		return err
+		return core.Result{Status: core.StatusError, Error: err}
 	}
 
 	if len(tracks) == 0 {
 		//TODO insert track
-		fmt.Fprintln(w, "track:", qArgs)
-		return core.ErrorItemNotFound
+		return core.Result{Status: core.StatusItemNotFound}
 	}
 	if len(tracks) > 1 {
-		fmt.Fprintln(w, "Multiple tracks found! Please re-try with more "+
-			"accurate arguments.")
-		for _, t := range tracks {
-			fmt.Fprintln(w, t)
-		}
-		return core.ErrorQueryAmbiguous
+		return core.Result{Status: core.StatusQueryNotUnique, Results: ItemToInterfaceSlice(tracks)}
 	}
 
-	track := tracks[0].(*Item)
-
-	//DEBUG
-	//TODO return some actual data
-	fmt.Println("track found:", track)
+	track := tracks[0]
 
 	// update stats
 	x := float64(*length_played / *length)
@@ -95,7 +54,7 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 	tl := float64(config.Current.ListenedLowerThreshold)
 
 	scoreAdd := float32(math.Min(1, math.Max(0, (x-tl)/(tu-tl))))
-	//TODO debug
+	//TODO test this
 
 	track.PlayCount++
 	if scoreAdd > 0 {
@@ -108,16 +67,19 @@ func (db *DB) TrackPlayed(args core.ArgMap, w io.Writer) error {
 
 	rows, err := db.dbmap.Update(track)
 	if err != nil {
-		return err
+		return core.Result{Status: core.StatusError, Error: err}
 	}
 	if rows == 0 {
-		return errors.New("Row could not be updated")
+		return core.Result{Status: core.StatusItemNotFound}
 	}
 
-	return nil
+	return core.Result{Status: core.StatusOK, Results: ItemToInterfaceSlice(tracks)}
 }
 
-// for single args
+// Fetches an argument from an ArgMap, used for single args
+// Breaks and passes along the error given, if it is not nil.
+// If the argument does not exist, the return value is nil.
+// Parameter force can be used to return an error if the argument does not exist.
 func getArg(args core.ArgMap, arg string, force bool, err error) (*string, error) {
 	if err != nil {
 		return nil, err
@@ -135,6 +97,8 @@ func getArg(args core.ArgMap, arg string, force bool, err error) (*string, error
 	return &value[0], nil
 }
 
+// Converts a *string to a boolean.
+// Passes along errors, if not nil.
 func castBool(arg *string, err error) (*bool, error) {
 	if err != nil {
 		return nil, err
@@ -149,6 +113,8 @@ func castBool(arg *string, err error) (*bool, error) {
 	return &casted, nil
 }
 
+// Converts a *string to a float32.
+// Passes along errors, if not nil.
 func castFloat(arg *string, err error) (*float32, error) {
 	if err != nil {
 		return nil, err

@@ -2,8 +2,6 @@ package db
 
 import (
 	"core"
-	"fmt"
-	"io"
 	log "logger"
 )
 
@@ -14,11 +12,13 @@ func (d *DB) initStats(c core.Core) {
 		[]string{"stats"},
 		"Prints some statistics about the database",
 		core.AuthUser,
-		func(_ core.ArgMap, w io.Writer) error {
-			fmt.Fprintf(w, " %7s %7s %7s\n", "Titles", "Folders", "Titles/Folder")
-			fmt.Fprintf(w, " %7d %7d %7f\n", d.TitlesTotal(), d.FoldersTotal(),
-				d.AvgFilesPerFolder())
-			return nil
+		func(_ core.ArgMap) core.Result {
+			res := map[string]interface{}{
+				"items_total":      d.TitlesTotal(),
+				"folders_total":    d.FoldersTotal(),
+				"items_per_folder": d.AvgFilesPerFolder(),
+			}
+			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
 }
 

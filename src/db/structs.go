@@ -15,18 +15,18 @@ const (
 
 // when inserting an item, Folder has to be a pointer with only the Path set.
 type Item struct {
-	Id            uint64 `db:"item_id"`
-	Title         string `db:"title"`
-	Artist        string `db:"artist"`
-	AlbumArtist   string `db:"album_artist"`
-	Album         string `db:"album"`
-	Genre         string `db:"genre"` //TODO more refined genres
-	TrackNumber   uint32 `db:"track_number"`
-	Filename      string `db:"filename"`
-	MusicbrainzId string `db:"musicbrainz_id"`
+	Id            uint64  `db:"item_id"`
+	Title         string  `db:"title"`
+	Artist        string  `db:"artist"`
+	AlbumArtist   *string `db:"album_artist"`
+	Album         *string `db:"album"`
+	Genre         *string `db:"genre"` //TODO more refined genres
+	TrackNumber   uint32  `db:"track_number"`
+	Filename      *string `db:"filename"`
+	MusicbrainzId *string `db:"musicbrainz_id"`
 
 	Folder   *Folder `db:"-"`
-	FolderId uint64  `db:"folder_id"`
+	FolderId *uint64 `db:"folder_id"`
 
 	Added int64 `db:"added"`
 
@@ -100,8 +100,14 @@ func (i *Item) Skipped() uint32 {
 func (i *Item) PreInsert(s gorp.SqlExecutor) error {
 	i.Added = time.Now().Unix()
 
+	if i.Filename == nil {
+		// No filename, no path.
+		i.Folder = nil
+		i.FolderId = nil
+		return nil
+	}
 	if i.Folder == nil {
-		return errors.New("Item insert needs a Folder!")
+		return errors.New("Item insert with path needs a Folder!")
 	}
 
 	// set the folder foreign key
@@ -119,7 +125,7 @@ func (i *Item) PreInsert(s gorp.SqlExecutor) error {
 	} else { // all is well, copy folder
 		i.Folder = &oldFolder
 	}
-	i.FolderId = i.Folder.Id
+	i.FolderId = &i.Folder.Id
 	return nil
 }
 

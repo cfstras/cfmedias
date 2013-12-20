@@ -5,11 +5,9 @@ import (
 	"core"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/coopernurse/gorp"
 	"github.com/go-contrib/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	"io"
 	log "logger"
 )
 
@@ -50,10 +48,9 @@ func (d *DB) Open(c core.Core) error {
 		[]string{"rescan"},
 		"Refreshes the database by re-scanning the media folder.",
 		core.AuthAdmin,
-		func(_ core.ArgMap, w io.Writer) error {
-			fmt.Fprintln(w, "Rescanning media folder...")
+		func(_ core.ArgMap) core.Result {
 			go d.Update()
-			return nil
+			return core.ResultOK
 		}})
 
 	return nil

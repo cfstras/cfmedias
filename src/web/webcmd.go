@@ -3,6 +3,7 @@ package web
 import (
 	"config"
 	"core"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -30,13 +31,18 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = n.core.Cmd(cmd, args, w, core.AuthGuest); err != nil {
+	if result := n.core.Cmd(cmd, args, core.AuthGuest); err != nil {
 		if err == core.ErrorCmdNotFound {
 			http.Error(w, "Command not found", 404)
 			return
 		}
 		http.Error(w, err.Error(), 500)
-		return
+	} else {
+		if str, err := json.MarshalIndent(result, "", "  "); err != nil {
+			http.Error(w, err.Error(), 500)
+		} else {
+			fmt.Fprint(w, str)
+		}
 	}
 }
 
