@@ -2,6 +2,7 @@ package db
 
 import (
 	"config"
+	"errors"
 	"github.com/coopernurse/gorp"
 	log "logger"
 	"os"
@@ -107,15 +108,20 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		return nil
 	}
 
+	title := tag.Title()
+	artist := tag.Artist()
+	if title == nil || artist == nil {
+		return errors.New("Title and Artist cannot be nil. File " + path)
+	}
 	item := &Item{
-		Title:       tag.Title(),
-		Artist:      tag.Artist(),
-		AlbumArtist: "",
+		Title:       *title,
+		Artist:      *artist,
+		AlbumArtist: nil,
 		Album:       tag.Album(),
 		Genre:       tag.Genre(),
 		TrackNumber: uint32(tag.Track()),
 		Folder:      &Folder{Path: parent},
-		Filename:    file,
+		Filename:    &file,
 	}
 
 	//TODO get album, check ID etc

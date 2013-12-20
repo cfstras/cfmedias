@@ -4,7 +4,6 @@ import (
 	"core"
 	"fmt"
 	"github.com/peterh/liner"
-	"io"
 	log "logger"
 	"os"
 	"strings"
@@ -61,20 +60,20 @@ func (c *impl) registerBaseCommands() {
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
 		core.AuthRoot,
-		func(_ core.ArgMap, _ io.Writer) error {
-			return c.Shutdown()
+		func(_ core.ArgMap) core.Result {
+			return core.ResultByError(c.Shutdown())
 		}})
 
 	c.RegisterCommand(core.Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
 		core.AuthGuest,
-		func(_ core.ArgMap, w io.Writer) error {
-			fmt.Fprintln(w, "Available commands:")
+		func(_ core.ArgMap) core.Result {
+			res := make(map[string]interface{})
 			for k, v := range c.commandSet {
-				fmt.Fprintln(w, " ", k, "-", v.Help)
+				res[k] = v.Help
 			}
-			return nil
+			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
 
 }
@@ -123,27 +122,25 @@ func (c *impl) CmdLine() {
 				}
 			}
 
-			err = c.Cmd(split[0], args, os.Stdout, core.AuthRoot)
-			if err != core.ErrorCmdNotFound {
+			result := c.Cmd(split[0], args, core.AuthRoot)
+			if result.Error != core.ErrorCmdNotFound {
 				c.repl.AppendHistory(cmd)
 			}
-			if err != nil {
-				log.Log.Println(err)
-			}
+			log.Log.Println(result)
 		}
 	}
 }
 
-func (c *impl) Cmd(cmd string, args core.ArgMap, w io.Writer, level core.AuthLevel) error {
+func (c *impl) Cmd(cmd string, args core.ArgMap, level core.AuthLevel) core.Result {
 	command, ok := c.commandMap[cmd]
 	if !ok {
-		return core.ErrorCmdNotFound
+		return core.Result{Error: core.ErrorCmdNotFound}
 	}
 	if level < command.MinAuthLevel {
-		return core.ErrorNotAllowed
+		return core.Result{Error: core.ErrorNotAllowed}
 	}
 
-	return command.Handler(args, w)
+	return command.Handler(args)
 }
 
 func (c *impl) completer(s string) []string {

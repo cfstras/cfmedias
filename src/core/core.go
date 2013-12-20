@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"io"
 )
 
 type ArgMap map[string][]string
@@ -28,16 +27,40 @@ type Command struct {
 	Verbs        []string
 	Help         string
 	MinAuthLevel AuthLevel
-	Handler      func(args ArgMap, w io.Writer) error
+	Handler      func(args ArgMap) Result
+}
+
+type Status string
+
+const (
+	StatusOK             Status = "OK"
+	StatusItemNotFound          = "ItemNotFound"
+	StatusError                 = "Error"
+	StatusQueryNotUnique        = "QueryNotUnique"
+)
+
+type Result struct {
+	Status  Status
+	Results []interface{}
+	Error   error
 }
 
 var (
+	ResultOK = Result{Status: StatusOK, Results: nil, Error: nil}
+
 	ErrorCmdNotFound = errors.New("Command not found!")
 	ErrorNotAllowed  = errors.New("You are not allowed to do that!")
 
-	ErrorItemNotFound   = errors.New("The requested item was not found.")
-	ErrorQueryAmbiguous = errors.New("Parameters are not accurate enough.")
+	//ErrorItemNotFound = errors.New("The requested item was not found.")
 )
+
+func ResultByError(err error) Result {
+	if err != nil {
+		return ResultOK
+	} else {
+		return Result{Status: StatusError, Error: err}
+	}
+}
 
 type Core interface {
 	Start() error
@@ -47,5 +70,5 @@ type Core interface {
 	RegisterCommand(Command)
 	UnregisterCommand(Command)
 	CmdLine()
-	Cmd(cmd string, args ArgMap, w io.Writer, level AuthLevel) error
+	Cmd(cmd string, args ArgMap, level AuthLevel) Result
 }
