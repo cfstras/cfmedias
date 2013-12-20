@@ -134,10 +134,10 @@ func (c *impl) CmdLine() {
 func (c *impl) Cmd(cmd string, args core.ArgMap, level core.AuthLevel) core.Result {
 	command, ok := c.commandMap[cmd]
 	if !ok {
-		return core.Result{Error: core.ErrorCmdNotFound}
+		return core.ResultByError(core.ErrorCmdNotFound)
 	}
 	if level < command.MinAuthLevel {
-		return core.Result{Error: core.ErrorNotAllowed}
+		return core.ResultByError(core.ErrorNotAllowed)
 	}
 
 	return command.Handler(args)
