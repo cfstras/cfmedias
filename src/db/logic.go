@@ -130,3 +130,20 @@ func castFloat(arg *string, err error) (*float32, error) {
 	smaller := float32(casted)
 	return &smaller, nil
 }
+
+// Converts a *string to a uint.
+// Passes along errrs, if not nil.
+func castUint(arg *string, err error) (*uint, error) {
+	if err != nil {
+		return nil, err
+	}
+	if arg == nil {
+		return nil, nil
+	}
+	casted, err := strconv.ParseUint(*arg, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	smaller := uint(casted)
+	return &smaller, nil
+}
