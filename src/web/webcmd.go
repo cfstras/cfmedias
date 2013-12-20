@@ -31,7 +31,7 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := n.core.Cmd(cmd, args, core.AuthGuest)
+	result := n.core.Cmd(core.CommandContext{cmd, args, core.AuthGuest})
 	if err == core.ErrorCmdNotFound {
 		http.Error(w, "Command not found", 404)
 		return

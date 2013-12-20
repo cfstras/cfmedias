@@ -12,12 +12,14 @@ func (d *DB) initStats(c core.Core) {
 		[]string{"stats"},
 		"Prints some statistics about the database",
 		core.AuthUser,
-		func(_ core.ArgMap) core.Result {
+		func(_ core.CommandContext) core.Result {
 			res := map[string]interface{}{
 				"items_total":      d.TitlesTotal(),
 				"folders_total":    d.FoldersTotal(),
 				"items_per_folder": d.AvgFilesPerFolder(),
 			}
+			//TODO more stats
+			//TODO stats per user level
 			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
 }

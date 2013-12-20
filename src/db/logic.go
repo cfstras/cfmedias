@@ -22,7 +22,8 @@ func (db *DB) initLogic(c core.Core) {
 		db.TrackPlayed})
 }
 
-func (db *DB) TrackPlayed(args core.ArgMap) core.Result {
+func (db *DB) TrackPlayed(ctx core.CommandContext) core.Result {
+	args := ctx.Args
 
 	tracks, err := db.GetItem(args)
 
