@@ -25,6 +25,7 @@ func (db *DB) initLogin(c core.Core) {
 			args := ctx.Args
 			var err error
 			name, err := getArg(args, "name", true, err)
+			email, err := getArg(args, "email", true, err)
 			authLevelS, err := getArg(args, "auth_level", true, err)
 			password, err := getArg(args, "password", true, err)
 
@@ -40,19 +41,64 @@ func (db *DB) initLogin(c core.Core) {
 					" with that level!"))
 			}
 
-			user, err := db.CreateUser(*name, authLevel, *password)
+			user, err := db.CreateUser(*name, *email, authLevel, *password)
 			if err == nil {
 				return core.Result{Status: core.StatusOK, Results: []interface{}{user}}
-			} else {
+			}
+			return core.Result{Status: core.StatusError, Error: err}
+		}})
+
+	c.RegisterCommand(core.Command{
+		[]string{"login"},
+		"Logs in with user/password and returns the auth token",
+		core.AuthGuest,
+		func(ctx core.CommandContext) core.Result {
+			args := ctx.Args
+			var err error
+			name, err := getArg(args, "name", true, err)
+			password, err := getArg(args, "password", true, err)
+
+			if err != nil {
 				return core.Result{Status: core.StatusError, Error: err}
 			}
+
+			success, authToken, err := db.Login(*name, *password)
+			if err == nil && success {
+				return core.Result{Status: core.StatusOK, Results: []interface{}{authToken}}
+			}
+			if err == nil {
+				return core.Result{Status: core.StatusError,
+					Error: errrs.New("Wrong username or password")}
+			}
+			return core.Result{Status: core.StatusError, Error: err}
 		}})
 }
 
-func (db *DB) CreateUser(name string, authLevel core.AuthLevel, password string) (
-	*User, error) {
+func (db *DB) Login(name string, password string) (success bool, authToken []byte,
+	err error) {
+	user := User{}
+	err = db.dbmap.SelectOne(&user, `select * from `+UserTable+` where name = ?`, name)
+	if err != nil {
+		return false, nil, errrs.New(err.Error())
+	}
+	if user.Id == 0 {
+		return false, nil, nil
+	}
+	salt := user.Password[:SaltSize]
+	expected := user.Password[SaltSize:]
+	hashedPassword := HashPassword([]byte(password), salt)
+	if 1 == subtle.ConstantTimeCompare(expected, hashedPassword) {
+		//TODO create new auth token on login to logout old instances
+		return true, user.AuthToken, nil
+	}
+	return false, nil, nil
+}
+
+func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
+	password string) (*User, error) {
 	//TODO validate username format
 	//TODO validate password format
+	//TODO validate email format
 
 	// check for unique
 	num, err := db.dbmap.SelectInt(`select count(*) from `+UserTable+
@@ -75,7 +121,7 @@ func (db *DB) CreateUser(name string, authLevel core.AuthLevel, password string)
 	}
 
 	// hash password
-	user.Password = HashPassword(password)
+	user.Password = MakePassword([]byte(password))
 
 	// store user
 	err = db.dbmap.Insert(&user)
@@ -87,15 +133,15 @@ func (db *DB) CreateUser(name string, authLevel core.AuthLevel, password string)
 	return &user, nil
 }
 
-//TODO test HashPassword
-func HashPassword(pass string) []byte {
+//TODO test MakePassword
+func MakePassword(pass []byte) []byte {
 	salt := make([]byte, SaltSize)
 	_, err := rand.Read(salt)
 	if err != nil {
 		return nil
 	}
 
-	key := pbkdf2.Key([]byte(pass), salt, Iterations, KeySize, sha256.New)
+	key := HashPassword(pass, salt)
 	if key == nil {
 		return nil
 	}
@@ -104,4 +150,8 @@ func HashPassword(pass string) []byte {
 	subtle.ConstantTimeCopy(1, hashed[SaltSize:], key)
 
 	return hashed
+}
+
+func HashPassword(pass, salt []byte) []byte {
+	return pbkdf2.Key(pass, salt, Iterations, KeySize, sha256.New)
 }

@@ -88,7 +88,7 @@ func getArg(args core.ArgMap, arg string, force bool, err error) (*string, error
 	value, ok := args[arg]
 	if !ok || len(value) == 0 {
 		if force {
-			return nil, errrs.New("argument " + arg + " missing!")
+			return nil, errrs.New("Argument '" + arg + "' missing!")
 		}
 		return nil, nil
 	}
