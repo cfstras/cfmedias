@@ -67,8 +67,11 @@ type Folder struct {
 type User struct {
 	Id uint64 `db:"user_id" json:"-"`
 
-	// Login name for the user. Has to be unique
+	// Login name for the user. Has to be unique.
 	Name string `db:"name" json:"name"`
+
+	// E-mail address. Has to be unique.
+	EMail string `db:"email" json:"email"`
 
 	AuthLevel core.AuthLevel `db:"auth_level" json:"auth_level"`
 
@@ -89,7 +92,13 @@ type ItemPathView struct {
 
 func (i *Item) String() string {
 	return fmt.Sprintf("Item[%d]{%s / %s - %s / %d %s, %s]", i.Id, i.Artist,
-		i.AlbumArtist, i.Album, i.TrackNumber, i.Title, i.Genre)
+		str(i.AlbumArtist), str(i.Album), i.TrackNumber, i.Title, str(i.Genre))
+}
+func str(s *string) string {
+	if s == nil {
+		return "<nil>"
+	}
+	return *s
 }
 
 // Returns a rating of the song and an indication of how accurate the score
