@@ -2,6 +2,8 @@ Database tables
 ===============
 and fields
 
+//TODO update this
+
 all:
 
 - hash
