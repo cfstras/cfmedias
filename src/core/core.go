@@ -1,7 +1,7 @@
 package core
 
 import (
-	"errors"
+	"errrs"
 )
 
 type ArgMap map[string][]string
@@ -40,18 +40,18 @@ const (
 )
 
 type Result struct {
-	Status  Status
-	Results []interface{}
-	Error   error
+	Status  Status        `json:"status"`
+	Results []interface{} `json:"results,omitempty"`
+	Error   error         `json:"error,omitempty"`
 }
 
 var (
 	ResultOK = Result{Status: StatusOK, Results: nil, Error: nil}
 
-	ErrorCmdNotFound = errors.New("Command not found!")
-	ErrorNotAllowed  = errors.New("You are not allowed to do that!")
+	ErrorCmdNotFound = errrs.New("Command not found!")
+	ErrorNotAllowed  = errrs.New("You are not allowed to do that!")
 
-	//ErrorItemNotFound = errors.New("The requested item was not found.")
+	//ErrorItemNotFound = errrs.New("The requested item was not found.")
 )
 
 func ResultByError(err error) Result {

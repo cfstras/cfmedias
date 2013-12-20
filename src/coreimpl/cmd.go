@@ -2,6 +2,7 @@ package coreimpl
 
 import (
 	"core"
+	"encoding/json"
 	"fmt"
 	"github.com/peterh/liner"
 	log "logger"
@@ -75,7 +76,7 @@ func (c *impl) registerBaseCommands() {
 			}
 			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
-
+	//TODO help should only print allowed commands
 }
 
 const maxUnicodeString = "\U0010FFFF"
@@ -126,7 +127,9 @@ func (c *impl) CmdLine() {
 			if result.Error != core.ErrorCmdNotFound {
 				c.repl.AppendHistory(cmd)
 			}
-			log.Log.Println(result)
+			bytes, _ := json.MarshalIndent(result, "", "  ")
+			os.Stdout.Write(bytes)
+			fmt.Println()
 		}
 	}
 }

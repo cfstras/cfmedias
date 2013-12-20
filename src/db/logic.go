@@ -3,7 +3,7 @@ package db
 import (
 	"config"
 	"core"
-	"errors"
+	"errrs"
 	"math"
 	"strconv"
 )
@@ -87,18 +87,18 @@ func getArg(args core.ArgMap, arg string, force bool, err error) (*string, error
 	value, ok := args[arg]
 	if !ok || len(value) == 0 {
 		if force {
-			return nil, errors.New("argument " + arg + " missing!")
+			return nil, errrs.New("argument " + arg + " missing!")
 		}
 		return nil, nil
 	}
 	if len(value) > 1 {
-		return nil, errors.New("argument " + arg + " cannot be supplied more than once!")
+		return nil, errrs.New("argument " + arg + " cannot be supplied more than once!")
 	}
 	return &value[0], nil
 }
 
 // Converts a *string to a boolean.
-// Passes along errors, if not nil.
+// Passes along errrs, if not nil.
 func castBool(arg *string, err error) (*bool, error) {
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func castBool(arg *string, err error) (*bool, error) {
 }
 
 // Converts a *string to a float32.
-// Passes along errors, if not nil.
+// Passes along errrs, if not nil.
 func castFloat(arg *string, err error) (*float32, error) {
 	if err != nil {
 		return nil, err
