@@ -22,7 +22,8 @@ Components of the program
   + delivers content to core
   + manages lists and users
   + keeps media hashes
-  + is replaceable (network, sqlite, mysql, postgres, ...)
+  + has a replaceable sql backend (sqlite, mysql, postgres, ...)
+  + can be completely supplied by a remote instance
   
 - db-importer:
   + uses db to add media to the library
@@ -42,4 +43,3 @@ Components of the program
 - share:
   + shares media in bittorrent-manner
   + keeps list of friends
-  + also headless

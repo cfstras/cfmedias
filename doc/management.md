@@ -3,7 +3,7 @@ Basic Management
 
 cfmedias keeps a database of all media.
 It creates *packages* of things which get sha-256 sums for identification.
-Everybody in the local network can then share those packages in bittorrent-manner.
+Machines in the local network can then share those packages in bittorrent-manner.
 
 
 packages
