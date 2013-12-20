@@ -1,6 +1,7 @@
 package db
 
 import (
+	"core"
 	"errrs"
 	"fmt"
 	"github.com/coopernurse/gorp"
@@ -11,6 +12,7 @@ import (
 const (
 	ItemTable   = "items"
 	FolderTable = "folders"
+	UserTable   = "users"
 )
 
 // when inserting an item, Folder has to be a pointer with only the Path set.
@@ -60,6 +62,23 @@ type Folder struct {
 
 	Added         int64  `db:"added"`
 	MusicbrainzId string `db:"musicbrainz_folder_id"`
+}
+
+type User struct {
+	Id uint64 `db:"user_id" json:"-"`
+
+	// Login name for the user. Has to be unique
+	Name string `db:"name" json:"name"`
+
+	AuthLevel core.AuthLevel `db:"auth_level" json:"auth_level"`
+
+	// salt + pbkdf2-hashed password
+	Password []byte `db:"password" json:"-"`
+
+	// Authentication token, used for sending requests
+	AuthToken []byte `db:"auth_token" json:"auth_token"`
+
+	//TODO optionally add a common secret for authenticating messages via HMAC
 }
 
 type ItemPathView struct {

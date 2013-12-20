@@ -42,7 +42,8 @@ func (d *DB) Open(c core.Core) error {
 	}
 
 	d.initStats(c)
-	d.initLogic(c)
+	d.initLogic(c) // hear the difference?
+	d.initLogin(c) // it's subtle but it could save your life
 
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
@@ -109,6 +110,7 @@ func (d *DB) checkTables() error {
 	d.dbmap.AddTableWithName(Item{}, ItemTable).SetKeys(true, "Id")
 	//dbmap.AddTableWithName(Album{}, "albums").SetKeys(true, "Id")
 	d.dbmap.AddTableWithName(Folder{}, FolderTable).SetKeys(true, "Id")
+	d.dbmap.AddTableWithName(User{}, UserTable).SetKeys(true, "Id")
 
 	err = d.dbmap.CreateTablesIfNotExists()
 	if err != nil {
