@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
+	"errrs"
 	"log"
 	"os"
 )
@@ -34,7 +34,7 @@ func Init() {
 
 func Load(configFile string) error {
 	if Current != nil && Current != Default {
-		return errors.New("Config already loaded.")
+		return errrs.New("Config already loaded.")
 	}
 
 	file, err := os.Open(configFile)
@@ -62,7 +62,7 @@ func Load(configFile string) error {
 
 func Save(configFile string) error {
 	if Current == nil {
-		return errors.New("Config has not been initialized, cannot save!")
+		return errrs.New("Config has not been initialized, cannot save!")
 	}
 
 	file, err := os.Create(configFile)

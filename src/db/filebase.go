@@ -2,7 +2,7 @@ package db
 
 import (
 	"config"
-	"errors"
+	"errrs"
 	"github.com/coopernurse/gorp"
 	log "logger"
 	"os"
@@ -111,7 +111,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	title := tag.Title()
 	artist := tag.Artist()
 	if title == nil || artist == nil {
-		return errors.New("Title and Artist cannot be nil. File " + path)
+		return errrs.New("Title and Artist cannot be nil. File " + path)
 	}
 	item := &Item{
 		Title:       *title,

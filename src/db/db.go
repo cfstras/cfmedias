@@ -4,7 +4,7 @@ import (
 	"config"
 	"core"
 	"database/sql"
-	"errors"
+	"errrs"
 	"github.com/coopernurse/gorp"
 	"github.com/go-contrib/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -18,7 +18,7 @@ type DB struct {
 
 func (d *DB) Open(c core.Core) error {
 	if d.dbmap != nil {
-		return errors.New("DB is already opened!")
+		return errrs.New("DB is already opened!")
 	}
 
 	var err error
@@ -58,7 +58,7 @@ func (d *DB) Open(c core.Core) error {
 
 func (d *DB) Close() error {
 	if d.dbmap == nil {
-		return errors.New("DB is not open!")
+		return errrs.New("DB is not open!")
 	}
 	return d.dbmap.Db.Close()
 }

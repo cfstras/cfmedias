@@ -1,7 +1,7 @@
 package db
 
 import (
-	"errors"
+	"errrs"
 	"fmt"
 	"github.com/coopernurse/gorp"
 	"math"
@@ -107,7 +107,7 @@ func (i *Item) PreInsert(s gorp.SqlExecutor) error {
 		return nil
 	}
 	if i.Folder == nil {
-		return errors.New("Item insert with path needs a Folder!")
+		return errrs.New("Item insert with path needs a Folder!")
 	}
 
 	// set the folder foreign key

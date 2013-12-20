@@ -32,7 +32,6 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := n.core.Cmd(cmd, args, core.AuthGuest)
-	fmt.Println(result)
 	if err == core.ErrorCmdNotFound {
 		http.Error(w, "Command not found", 404)
 		return
@@ -43,8 +42,6 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		w.Write(bytes)
 		fmt.Fprintln(w)
 	}
-	//TODO errors are not marshaled correctly
-
 }
 
 func (n *NetCmdLine) Start(core core.Core) {
