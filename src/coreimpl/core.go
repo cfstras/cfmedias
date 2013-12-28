@@ -67,7 +67,7 @@ func (c *impl) Start() error {
 
 	// start web
 	net := new(web.NetCmdLine)
-	go net.Start(c)
+	go net.Start(c, c.db)
 
 	// update local files
 	go c.db.Update()

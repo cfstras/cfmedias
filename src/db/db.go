@@ -11,7 +11,9 @@ import (
 	log "logger"
 )
 
-type DB struct {
+type DB dbstruct
+
+type dbstruct struct {
 	dbmap *gorp.DbMap
 	guid  string
 }
