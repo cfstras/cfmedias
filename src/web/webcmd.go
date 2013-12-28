@@ -3,6 +3,7 @@ package web
 import (
 	"config"
 	"core"
+	"db"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 type NetCmdLine struct {
 	core core.Core
+	db   *db.DB
 }
 
 func (n *NetCmdLine) getCmd(r *http.Request) (err error, cmd string, args core.ArgMap) {
@@ -30,8 +32,21 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	// Auth
+	//TODO get auth token from request
+	authToken := []byte{0, 0, 0, 0}
+	authLevel, err := n.db.Authenticate(authToken)
+	if err != nil {
+		if bytes, err := json.MarshalIndent(err, "", "  "); err != nil {
+			http.Error(w, err.Error(), 500)
+		} else {
+			w.Write(bytes)
+			fmt.Fprintln(w)
+		}
+		return
+	}
 
-	result := n.core.Cmd(core.CommandContext{cmd, args, core.AuthGuest})
+	result := n.core.Cmd(core.CommandContext{cmd, args, authLevel})
 	if err == core.ErrorCmdNotFound {
 		http.Error(w, "Command not found", 404)
 		return
@@ -44,8 +59,9 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (n *NetCmdLine) Start(core core.Core) {
+func (n *NetCmdLine) Start(core core.Core, db *db.DB) {
 	n.core = core
+	n.db = db
 	http.HandleFunc("/api/", n.api)
 	url := fmt.Sprint(":", config.Current.WebPort)
 	http.ListenAndServe(url, nil)

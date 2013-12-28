@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errrs"
+	"regexp"
 )
 
 const (
@@ -94,11 +95,33 @@ func (db *DB) Login(name string, password string) (success bool, authToken []byt
 	return false, nil, nil
 }
 
+func (db *DB) Authenticate(authtoken []byte) (core.AuthLevel, error) {
+	invalidErr := errrs.New("auth token invalid")
+	user := User{}
+
+	err := db.dbmap.SelectOne(&user, `select * from `+UserTable+` where auth_token = ?`, authtoken)
+	if err != nil {
+		return core.AuthGuest, invalidErr
+	}
+	if user.Id == 0 {
+		// not found
+		return core.AuthGuest, invalidErr
+	}
+	return user.AuthLevel, nil
+}
+
 func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 	password string) (*User, error) {
-	//TODO validate username format
-	//TODO validate password format
-	//TODO validate email format
+
+	if !IsSafe(name, TypeUsername) {
+		return nil, errrs.New("Username is invalid. Can contain a-z, 0-9, underscore and dash.")
+	}
+	if !IsSafe(email, TypeEmail) {
+		return nil, errrs.New("EMail is invalid.")
+	}
+	if !IsSafe(password, TypePassword) {
+		return nil, errrs.New("Password is invalid. Must be at least 6 and at most 128 characters.")
+	}
 
 	// check for unique
 	num, err := db.dbmap.SelectInt(`select count(*) from `+UserTable+
@@ -131,6 +154,33 @@ func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 	}
 
 	return &user, nil
+}
+
+type StringType uint
+
+const (
+	TypePassword StringType = iota
+	TypeUsername
+	TypeEmail
+)
+
+var (
+	passwordRegex = regexp.MustCompile(`.{6,128}`)
+	usernameRegex = regexp.MustCompile(`[a-z0-9_-]{4,64}`)
+	emailRegex    = regexp.MustCompile(`[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9._-]+`)
+	//TODO refine email regex (or use library)
+)
+
+func IsSafe(s string, t StringType) bool {
+	switch t {
+	case TypePassword:
+		return passwordRegex.MatchString(s)
+	case TypeUsername:
+		return usernameRegex.MatchString(s)
+	case TypeEmail:
+		return emailRegex.MatchString(s)
+	}
+	return false
 }
 
 //TODO test MakePassword

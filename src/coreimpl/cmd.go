@@ -78,7 +78,6 @@ func (c *impl) registerBaseCommands() {
 			}
 			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
-	//TODO help should only print allowed commands
 }
 
 const maxUnicodeString = "\U0010FFFF"

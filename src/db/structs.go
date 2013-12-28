@@ -106,8 +106,6 @@ func str(s *string) string {
 // Both values are in the range of 0 to 1.
 // The computation uses a combination of PlayScore, PlayCount and ScrobbledCount.
 func (i *Item) Rating() (rating, accuracy float32) {
-	//TODO
-
 	// accuracy is based on how much data there is on this track.
 	//TODO use an average data count on the whole database instead of hard one
 	acc := (i.PlayScore - 5) // every data below 5 listens is basically useless
