@@ -3,9 +3,8 @@ package db
 import (
 	"config"
 	"core"
-	"errrs"
 	"math"
-	"strconv"
+	"util"
 )
 
 const (
@@ -27,13 +26,13 @@ func (db *DB) TrackPlayed(ctx core.CommandContext) core.Result {
 
 	tracks, err := db.GetItem(args)
 
-	lengthS, err := getArg(args, "length", true, err)
-	length_playedS, err := getArg(args, "length_played", true, err)
-	scrobbledS, err := getArg(args, "scrobbled", true, err)
+	lengthS, err := util.GetArg(args, "length", true, err)
+	length_playedS, err := util.GetArg(args, "length_played", true, err)
+	scrobbledS, err := util.GetArg(args, "scrobbled", true, err)
 
-	length, err := castFloat(lengthS, err)
-	length_played, err := castFloat(length_playedS, err)
-	scrobbled, err := castBool(scrobbledS, err)
+	length, err := util.CastFloat(lengthS, err)
+	length_played, err := util.CastFloat(length_playedS, err)
+	scrobbled, err := util.CastBool(scrobbledS, err)
 
 	if err != nil {
 		return core.Result{Status: core.StatusError, Error: err}
@@ -75,75 +74,4 @@ func (db *DB) TrackPlayed(ctx core.CommandContext) core.Result {
 	}
 
 	return core.Result{Status: core.StatusOK, Results: ItemToInterfaceSlice(tracks)}
-}
-
-// Fetches an argument from an ArgMap, used for single args
-// Breaks and passes along the error given, if it is not nil.
-// If the argument does not exist, the return value is nil.
-// Parameter force can be used to return an error if the argument does not exist.
-func getArg(args core.ArgMap, arg string, force bool, err error) (*string, error) {
-	if err != nil {
-		return nil, err
-	}
-	value, ok := args[arg]
-	if !ok || len(value) == 0 {
-		if force {
-			return nil, errrs.New("Argument '" + arg + "' missing!")
-		}
-		return nil, nil
-	}
-	if len(value) > 1 {
-		return nil, errrs.New("argument " + arg + " cannot be supplied more than once!")
-	}
-	return &value[0], nil
-}
-
-// Converts a *string to a boolean.
-// Passes along errrs, if not nil.
-func castBool(arg *string, err error) (*bool, error) {
-	if err != nil {
-		return nil, err
-	}
-	if arg == nil {
-		return nil, nil
-	}
-	casted, err := strconv.ParseBool(*arg)
-	if err != nil {
-		return nil, err
-	}
-	return &casted, nil
-}
-
-// Converts a *string to a float32.
-// Passes along errrs, if not nil.
-func castFloat(arg *string, err error) (*float32, error) {
-	if err != nil {
-		return nil, err
-	}
-	if arg == nil {
-		return nil, nil
-	}
-	casted, err := strconv.ParseFloat(*arg, 32)
-	if err != nil {
-		return nil, err
-	}
-	smaller := float32(casted)
-	return &smaller, nil
-}
-
-// Converts a *string to a uint.
-// Passes along errrs, if not nil.
-func castUint(arg *string, err error) (*uint, error) {
-	if err != nil {
-		return nil, err
-	}
-	if arg == nil {
-		return nil, nil
-	}
-	casted, err := strconv.ParseUint(*arg, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	smaller := uint(casted)
-	return &smaller, nil
 }

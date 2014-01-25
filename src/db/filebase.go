@@ -85,7 +85,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	if err := up.tx.SelectOne(&itemPath,
 		`select item_id Id, filename Filename, path Path
 		from `+ItemTable+`
-		natural join `+FolderTable+`
+		join `+FolderTable+` on `+FolderTable+`.folder_id = `+ItemTable+`.folder_id
 		where filename = ?
 		and path = ?`,
 		file, parent); err != nil {

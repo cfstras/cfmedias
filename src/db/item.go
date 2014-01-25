@@ -2,16 +2,17 @@ package db
 
 import (
 	"core"
+	"util"
 )
 
 func (db *DB) GetItem(args core.ArgMap) ([]*Item, error) {
 	// check if necessary args are there
 	var err error
-	title, err := getArg(args, "title", true, err)
-	artist, err := getArg(args, "artist", true, err)
-	album, err := getArg(args, "album", false, err)
-	album_artist, err := getArg(args, "album_artist", false, err)
-	//musicbrainz_id, err := getArg(args, "musicbrainz_id", false, err)
+	title, err := util.GetArg(args, "title", true, err)
+	artist, err := util.GetArg(args, "artist", true, err)
+	album, err := util.GetArg(args, "album", false, err)
+	album_artist, err := util.GetArg(args, "album_artist", false, err)
+	//musicbrainz_id, err := util.GetArg(args, "musicbrainz_id", false, err)
 
 	if err != nil {
 		return nil, err

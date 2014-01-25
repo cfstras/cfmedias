@@ -56,6 +56,7 @@ var (
 
 	ErrorCmdNotFound = errrs.New("Command not found!")
 	ErrorNotAllowed  = errrs.New("You are not allowed to do that!")
+	ErrorNotLoggedIn = errrs.New("You are not allowed to do that; you need to be logged in!")
 
 	//ErrorItemNotFound = errrs.New("The requested item was not found.")
 )
@@ -77,4 +78,5 @@ type Core interface {
 	UnregisterCommand(Command)
 	CmdLine()
 	Cmd(ctx CommandContext) Result
+	IsCmdAllowed(level AuthLevel, cmd string) (bool, error)
 }

@@ -8,7 +8,7 @@
     "settings": {
         "GoSublime": {
             "env": {
-                "GOPATH": "$project"
+                "GOPATH": "$HOME/go:$GS_GOPATH:${project}"
             }
         }
     },

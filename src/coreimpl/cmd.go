@@ -136,16 +136,29 @@ func (c *impl) CmdLine() {
 }
 
 func (c *impl) Cmd(ctx core.CommandContext) core.Result {
-
 	command, ok := c.commandMap[ctx.Cmd]
 	if !ok {
 		return core.ResultByError(core.ErrorCmdNotFound)
 	}
 	if ctx.AuthLevel < command.MinAuthLevel {
+		if ctx.AuthLevel == core.AuthGuest {
+			return core.ResultByError(core.ErrorNotLoggedIn)
+		}
 		return core.ResultByError(core.ErrorNotAllowed)
 	}
 
 	return command.Handler(ctx)
+}
+
+func (c *impl) IsCmdAllowed(level core.AuthLevel, cmd string) (bool, error) {
+	command, ok := c.commandMap[cmd]
+	if !ok {
+		return false, core.ErrorCmdNotFound
+	}
+	if level < command.MinAuthLevel {
+		return false, nil
+	}
+	return true, nil
 }
 
 func (c *impl) completer(s string) []string {

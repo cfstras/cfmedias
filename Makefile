@@ -28,4 +28,4 @@ deps:
 	go get github.com/peterh/liner
 	go get code.google.com/p/go.crypto/pbkdf2
 
-	echo please install portaudio1.9-dev and libtagc0-dev with your package manager
+	@echo please install portaudio1.9-dev and libtagc0-dev with your package manager

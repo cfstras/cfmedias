@@ -8,6 +8,7 @@ import (
 	"crypto/subtle"
 	"errrs"
 	"regexp"
+	"util"
 )
 
 const (
@@ -25,12 +26,12 @@ func (db *DB) initLogin(c core.Core) {
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args
 			var err error
-			name, err := getArg(args, "name", true, err)
-			email, err := getArg(args, "email", true, err)
-			authLevelS, err := getArg(args, "auth_level", true, err)
-			password, err := getArg(args, "password", true, err)
+			name, err := util.GetArg(args, "name", true, err)
+			email, err := util.GetArg(args, "email", true, err)
+			authLevelS, err := util.GetArg(args, "auth_level", true, err)
+			password, err := util.GetArg(args, "password", true, err)
 
-			authLevelI, err := castUint(authLevelS, err)
+			authLevelI, err := util.CastUint(authLevelS, err)
 
 			if err != nil {
 				return core.Result{Status: core.StatusError, Error: err}
@@ -56,8 +57,8 @@ func (db *DB) initLogin(c core.Core) {
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args
 			var err error
-			name, err := getArg(args, "name", true, err)
-			password, err := getArg(args, "password", true, err)
+			name, err := util.GetArg(args, "name", true, err)
+			password, err := util.GetArg(args, "password", true, err)
 
 			if err != nil {
 				return core.Result{Status: core.StatusError, Error: err}

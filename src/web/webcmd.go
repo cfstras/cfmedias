@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"util"
 )
 
 type NetCmdLine struct {
@@ -27,28 +28,37 @@ func (n *NetCmdLine) getCmd(r *http.Request) (err error, cmd string, args core.A
 }
 
 func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
+	// get command name from url
 	err, cmd, args := n.getCmd(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	// Auth
-	//TODO get auth token from request
-	authToken := []byte{0, 0, 0, 0}
-	authLevel, err := n.db.Authenticate(authToken)
+
+	// check auth token
+	token, err := util.GetArg(args, "auth_token", false, nil)
 	if err != nil {
-		if bytes, err := json.MarshalIndent(err, "", "  "); err != nil {
-			http.Error(w, err.Error(), 500)
-		} else {
-			w.Write(bytes)
-			fmt.Fprintln(w)
-		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	authLevel := core.AuthGuest
+	if token != nil {
+		authLevel, err = n.db.Authenticate([]byte(*token))
+		if err != nil {
+			if bytes, err := json.MarshalIndent(err, "", "  "); err != nil {
+				http.Error(w, err.Error(), 500)
+			} else {
+				w.Write(bytes)
+				fmt.Fprintln(w)
+			}
+			return
+		}
+	}
 
+	// execute command
 	result := n.core.Cmd(core.CommandContext{cmd, args, authLevel})
-	if err == core.ErrorCmdNotFound {
-		http.Error(w, "Command not found", 404)
+	if result.Error == core.ErrorCmdNotFound {
+		http.Error(w, result.Error.Error(), http.StatusNotFound)
 		return
 	}
 	if bytes, err := json.MarshalIndent(result, "", "  "); err != nil {

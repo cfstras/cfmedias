@@ -24,7 +24,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	//go sineLogon()
+	go sineLogon()
 
 	// listen for commands
 	inst.CmdLine()
