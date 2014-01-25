@@ -4,12 +4,12 @@ Making it easy to organize your media.
 
 Overview
 --------
-cfmedias aims to let you take control of your media library.
-It lets you manage all of your media in a central place.
+cfmedias aims to let you take control of your media library.  
+It lets you manage all of your media in a central place.  
+It lets you listen to your music from any device you own and still get ratings and playcounts back to cfmedias.
 
 What it should be one day:
 
-- lightweight
 - fast
 - supporting every media format you could imagine
 - networking-enabled to let you share media within your home network
@@ -43,5 +43,4 @@ Disclaimer
 *This program is far from finished.*
 It may destruct your computer, your whole network or induce World War III.
 I am not responsible for anything this code does on your computer, your family or your cat.
-You are completely on your own, I probably don't yet know myself how to solve any problems you might encounter
-(If I did, I would have fixed it).
+You are completely on your own, I probably don't yet know myself how to solve any problems you might encounter (If I did, I would have fixed them).
