@@ -6,10 +6,10 @@ Overview
 --------
 cfmedias aims to let you take control of your media library.
 It lets you manage all of your media in a central place.
+It lets you listen to your music from any device you own and still get ratings and playcounts back to cfmedias.
 
 What it should be one day:
 
-- lightweight
 - fast
 - supporting every media format you could imagine
 - networking-enabled to let you share media within your home network
@@ -35,10 +35,7 @@ On OS X, you need at least Go 1.2rc5.
 
 License
 -------
-You are granted the right to share this with anyone and modify it if you like to.
-You are allowed to release this code, if you have made serious modifications and extensions to it, under any License that permits making money from the code or the built program.  
-You are allowed to sell any Images you generate with this code or any modifications someone else made to it.
-You are NOT allowed to sell this code, any binaries built from it or any binaries or code that use this code.
+This software is released under the 2-clause BSD-license. For details, see LICENSE.md
 Also, the author would love it if you send him any useful modifications you made to this code.
 
 
@@ -47,5 +44,4 @@ Disclaimer
 *This program is far from finished.*
 It may destruct your computer, your whole network or induce World War III.
 I am not responsible for anything this code does on your computer, your family or your cat.
-You are completely on your own, I probably don't yet know myself how to solve any problems you might encounter
-(If I did, I would have fixed it).
+You are completely on your own, I probably don't yet know myself how to solve any problems you might encounter (If I did, I would have fixed them).
