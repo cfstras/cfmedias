@@ -22,6 +22,11 @@ func (db *DB) initLogin(c core.Core) {
 	c.RegisterCommand(core.Command{
 		[]string{"createuser"},
 		"Creates a user in the database",
+		map[string]string{
+			"name":      "Username",
+			"email":     "E-Mail",
+			"authLevel": "User Rank: Guest(0), User(1), Admin(2), Root(3)",
+			"password":  "Password"},
 		core.AuthAdmin,
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args
@@ -53,6 +58,9 @@ func (db *DB) initLogin(c core.Core) {
 	c.RegisterCommand(core.Command{
 		[]string{"login"},
 		"Logs in with user/password and returns the auth token",
+		map[string]string{
+			"name":     "Username",
+			"password": "Password"},
 		core.AuthGuest,
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args

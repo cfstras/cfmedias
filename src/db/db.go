@@ -50,6 +50,7 @@ func (d *DB) Open(c core.Core) error {
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},
 		"Refreshes the database by re-scanning the media folder.",
+		map[string]string{},
 		core.AuthAdmin,
 		func(_ core.CommandContext) core.Result {
 			go d.Update()

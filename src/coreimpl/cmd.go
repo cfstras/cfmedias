@@ -8,6 +8,7 @@ import (
 	log "logger"
 	"os"
 	"strings"
+	"util"
 )
 
 // inits the cmd subsystem
@@ -38,7 +39,7 @@ func (c *impl) RegisterCommand(command core.Command) {
 		old, already := c.commandMap[verb]
 		if already {
 			fmt.Println("error registering verb", verb, `for command "`,
-				command.Help, `", it already exists with command "`, old.Help, `".`)
+				command.Description, `", it already exists with command "`, old.Description, `".`)
 			return
 		}
 	}
@@ -60,6 +61,7 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"quit", "q", "close", "exit"},
 		"Shuts down and exits.",
+		map[string]string{},
 		core.AuthRoot,
 		func(_ core.CommandContext) core.Result {
 			return core.ResultByError(c.Shutdown())
@@ -68,16 +70,35 @@ func (c *impl) registerBaseCommands() {
 	c.RegisterCommand(core.Command{
 		[]string{"help", "h", "?"},
 		"Prints help.",
+		map[string]string{"c": "(Optional) the command to get help for"},
 		core.AuthGuest,
 		func(ctx core.CommandContext) core.Result {
 			res := make(map[string]interface{})
-			for k, v := range c.commandSet {
+			mk := func(k string, v core.Command) {
 				if ctx.AuthLevel >= v.MinAuthLevel {
-					res[k] = v.Help
+					res[k] = CmdHelp{v.Description, v.ArgsHelp}
+				}
+			}
+
+			var err error
+			cmd, err := util.GetArg(ctx.Args, "c", false, err)
+			if err != nil {
+				return core.ResultByError(err)
+			}
+			if cmd != nil {
+				mk(*cmd, c.commandSet[*cmd])
+			} else {
+				for k, v := range c.commandSet {
+					mk(k, v)
 				}
 			}
 			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
 		}})
+}
+
+type CmdHelp struct {
+	Desc string
+	Args map[string]string
 }
 
 const maxUnicodeString = "\U0010FFFF"

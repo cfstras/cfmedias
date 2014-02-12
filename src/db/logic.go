@@ -16,7 +16,15 @@ const (
 func (db *DB) initLogic(c core.Core) {
 	c.RegisterCommand(core.Command{
 		[]string{"trackplayed"},
-		"Inserts a track play into the database",
+		"Inserts a track playback into the database statistics",
+		map[string]string{
+			"title":         "Title",
+			"artist":        "Artist",
+			"album":         "Album",
+			"album_artist":  "Album Artist",
+			"length":        "Track length in ms",
+			"length_played": "The time the track was listened to (when fully played: length) in ms",
+			"scrobbled":     "Whether the track was scrobbled to last.fm/libre.fm"},
 		core.AuthUser,
 		db.TrackPlayed})
 }

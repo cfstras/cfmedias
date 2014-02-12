@@ -31,7 +31,8 @@ type CommandContext struct {
 
 type Command struct {
 	Verbs        []string
-	Help         string
+	Description  string
+	ArgsHelp     map[string]string
 	MinAuthLevel AuthLevel
 	Handler      func(ctx CommandContext) Result
 }

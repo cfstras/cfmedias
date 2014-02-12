@@ -11,6 +11,7 @@ func (d *DB) initStats(c core.Core) {
 	c.RegisterCommand(core.Command{
 		[]string{"stats"},
 		"Prints some statistics about the database",
+		map[string]string{},
 		core.AuthUser,
 		func(_ core.CommandContext) core.Result {
 			res := map[string]interface{}{
