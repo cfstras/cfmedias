@@ -46,6 +46,7 @@ func (d *DB) Open(c core.Core) error {
 	d.initStats(c)
 	d.initLogic(c) // hear the difference?
 	d.initLogin(c) // it's subtle but it could save your life
+	d.initList(c)
 
 	c.RegisterCommand(core.Command{
 		[]string{"rescan"},

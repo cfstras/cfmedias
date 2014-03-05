@@ -23,6 +23,7 @@ func (db *DB) initLogic(c core.Core) {
 			"album":         "Album",
 			"album_artist":  "Album Artist",
 			"length":        "Track length in ms",
+			"date":          "Time the listening occurred, as Unix timestamp",
 			"length_played": "The time the track was listened to (when fully played: length) in ms",
 			"scrobbled":     "Whether the track was scrobbled to last.fm/libre.fm"},
 		core.AuthUser,

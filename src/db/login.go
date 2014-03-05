@@ -74,7 +74,9 @@ func (db *DB) initLogin(c core.Core) {
 
 			success, authToken, err := db.Login(*name, *password)
 			if err == nil && success {
-				return core.Result{Status: core.StatusOK, Results: []interface{}{authToken}}
+				return core.Result{Status: core.StatusOK, Results: []interface{}{
+					map[string][]byte{"auth_token": authToken},
+				}}
 			}
 			if err == nil {
 				return core.Result{Status: core.StatusError,

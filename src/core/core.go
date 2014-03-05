@@ -55,9 +55,10 @@ type Result struct {
 var (
 	ResultOK = Result{Status: StatusOK, Results: nil, Error: nil}
 
-	ErrorCmdNotFound = errrs.New("Command not found!")
-	ErrorNotAllowed  = errrs.New("You are not allowed to do that!")
-	ErrorNotLoggedIn = errrs.New("You are not allowed to do that; you need to be logged in!")
+	ErrorCmdNotFound    = errrs.New("Command not found!")
+	ErrorNotAllowed     = errrs.New("You are not allowed to do that!")
+	ErrorNotLoggedIn    = errrs.New("You are not allowed to do that; you need to be logged in!")
+	ErrorNotImplemented = errrs.New("Sorry, this feature is not implemented yet.")
 
 	//ErrorItemNotFound = errrs.New("The requested item was not found.")
 )
