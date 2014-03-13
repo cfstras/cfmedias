@@ -100,32 +100,32 @@ func (db *DB) Login(name string, password string) (success bool, authToken []byt
 	expected := user.Password[SaltSize:]
 	hashedPassword := HashPassword([]byte(password), salt)
 	if 1 == subtle.ConstantTimeCompare(expected, hashedPassword) {
-		//TODO create new auth token on login to logout old instances
+		//TODO add option to create new authtoken to logout all clients
 		return true, user.AuthToken, nil
 	}
 	return false, nil, nil
 }
 
-func (db *DB) Authenticate(authtoken []byte) (core.AuthLevel, error) {
+// Checks a given authentication token agains the database.
+// On success, returns the permission level of the user and their ID
+// On failure, returns (AuthGuest, nil, error)
+func (db *DB) Authenticate(authtoken []byte) (core.AuthLevel, *uint64, error) {
 	invalidErr := errrs.New("auth token invalid")
 	user := User{}
 
 	err := db.dbmap.SelectOne(&user, `select * from `+UserTable+` where auth_token = ?`, authtoken)
-	if err != nil {
-		return core.AuthGuest, invalidErr
+	if err != nil || user.Id == 0 { // not found
+		return core.AuthGuest, nil, invalidErr
 	}
-	if user.Id == 0 {
-		// not found
-		return core.AuthGuest, invalidErr
-	}
-	return user.AuthLevel, nil
+	return user.AuthLevel, &user.Id, nil
 }
 
 func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 	password string) (*User, error) {
 
 	if !IsSafe(name, TypeUsername) {
-		return nil, errrs.New("Username is invalid. Can contain a-z, 0-9, underscore and dash.")
+		return nil, errrs.New(`Username is invalid. Can contain a-z, 0-9,
+		                      underscore and dash, minimum 3 characters.`)
 	}
 	if !IsSafe(email, TypeEmail) {
 		return nil, errrs.New("EMail is invalid.")
@@ -149,6 +149,7 @@ func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 
 	// create authtoken
 	user.AuthToken = make([]byte, AuthTokenSize)
+	//TODO make a hex string!
 	_, err = rand.Read(user.AuthToken)
 	if err != nil {
 		return nil, err
@@ -177,7 +178,7 @@ const (
 
 var (
 	passwordRegex = regexp.MustCompile(`.{6,128}`)
-	usernameRegex = regexp.MustCompile(`[a-z0-9_-]{4,64}`)
+	usernameRegex = regexp.MustCompile(`[a-z0-9_-]{3,64}`)
 	emailRegex    = regexp.MustCompile(`[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9._-]+`)
 	//TODO refine email regex (or use library)
 )

@@ -24,9 +24,11 @@ const (
 )
 
 type CommandContext struct {
-	Cmd       string
-	Args      ArgMap
-	AuthLevel AuthLevel
+	Cmd  string // Command given
+	Args ArgMap // arguments of the request
+
+	AuthLevel AuthLevel // permission level of current user
+	UserID    *uint64   // logged in User ID or nil
 }
 
 type Command struct {
