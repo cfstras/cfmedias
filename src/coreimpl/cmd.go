@@ -145,7 +145,7 @@ func (c *impl) CmdLine() {
 				}
 			}
 
-			result := c.Cmd(core.CommandContext{split[0], args, core.AuthRoot})
+			result := c.Cmd(core.CommandContext{split[0], args, core.AuthRoot, nil})
 			if result.Error != core.ErrorCmdNotFound {
 				c.repl.AppendHistory(cmd)
 			}

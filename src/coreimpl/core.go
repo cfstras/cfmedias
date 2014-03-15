@@ -1,6 +1,7 @@
 package coreimpl
 
 import (
+	as "audioscrobbler"
 	"config"
 	"core"
 	"db"
@@ -28,7 +29,8 @@ type impl struct {
 	replActive bool
 	reading    bool
 
-	db *db.DB
+	db             *db.DB
+	audioscrobbler *as.AS
 }
 
 func New() core.Core {
@@ -68,6 +70,10 @@ func (c *impl) Start() error {
 	// start web
 	net := new(web.NetCmdLine)
 	go net.Start(c, c.db)
+
+	// start audioscrobbler
+	c.audioscrobbler = new(as.AS)
+	c.audioscrobbler.Start(c, c.db)
 
 	// update local files
 	go c.db.Update()

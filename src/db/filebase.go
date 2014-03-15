@@ -6,7 +6,7 @@ import (
 	"github.com/coopernurse/gorp"
 	log "logger"
 	"os"
-	"os/user"
+	osuser "os/user"
 	"path"
 	"path/filepath"
 	"strings"
@@ -26,7 +26,7 @@ func (d *DB) Update() {
 	// keep file base up to date
 	path := config.Current.MediaPath
 	if strings.Contains(path, "~") {
-		user, err := user.Current()
+		user, err := osuser.Current()
 		if err != nil {
 			log.Log.Println("Error getting user home directory:", err)
 			return

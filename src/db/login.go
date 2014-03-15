@@ -7,15 +7,21 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errrs"
+	"math/big"
 	"regexp"
 	"util"
 )
 
 const (
-	SaltSize      = 128
-	Iterations    = 10000
-	AuthTokenSize = 128
-	KeySize       = 512
+	// Settings for the stored hash, PBKDF2
+	SaltSize   = 128
+	Iterations = 10000
+	KeySize    = 512
+
+	// only characters easily typeable on a mobile
+	AuthTokenChars = `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`
+	// also, not too many of them
+	AuthTokenSize = 64
 )
 
 func (db *DB) initLogin(c core.Core) {
@@ -69,7 +75,7 @@ func (db *DB) initLogin(c core.Core) {
 			password, err := util.GetArg(args, "password", true, err)
 
 			if err != nil {
-				return core.Result{Status: core.StatusError, Error: err}
+				return core.ResultByError(err)
 			}
 
 			success, authToken, err := db.Login(*name, *password)
@@ -83,6 +89,41 @@ func (db *DB) initLogin(c core.Core) {
 					Error: errrs.New("Wrong username or password")}
 			}
 			return core.Result{Status: core.StatusError, Error: err}
+		}})
+
+	c.RegisterCommand(core.Command{
+		[]string{"change_auth_token", "logout"},
+		`Changes the authentication token of the user, thereby logging out all
+		clients`,
+		map[string]string{
+			"name": `(Optional) username of the user to log out. Leave empty to
+			use current user`,
+		},
+		core.AuthUser,
+		func(ctx core.CommandContext) core.Result {
+			args := ctx.Args
+			var err error
+			name, err := util.GetArg(args, "name", false, err)
+			if err != nil {
+				return core.ResultByError(err)
+			}
+			var user *User
+			if name != nil {
+				if ctx.AuthLevel < core.AuthAdmin {
+					return core.ResultByError(core.ErrorNotAllowed)
+				}
+				user, err = db.GetUserByName(*name)
+			} else {
+				if ctx.UserId == nil {
+					return core.ResultByError(core.ErrorNotLoggedIn)
+				}
+				user, err = db.GetUser(*ctx.UserId)
+			}
+			if user == nil {
+				return core.ResultByError(core.ErrorUserNotFound)
+			}
+			_, err = db.ChangeAuthToken(user)
+			return core.ResultByError(err)
 		}})
 }
 
@@ -148,9 +189,7 @@ func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 	user := User{Name: name, AuthLevel: authLevel}
 
 	// create authtoken
-	user.AuthToken = make([]byte, AuthTokenSize)
-	//TODO make a hex string!
-	_, err = rand.Read(user.AuthToken)
+	user.AuthToken, err = db.makeAuthToken()
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +205,32 @@ func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 	}
 
 	return &user, nil
+}
+
+// changes auth token and saves user
+// returns: new auth token and/or error.
+func (d *DB) ChangeAuthToken(user *User) ([]byte, error) {
+	var err error
+	user.AuthToken, err = d.makeAuthToken()
+	if err != nil {
+		return nil, err
+	}
+	d.dbmap.Update(user)
+	return user.AuthToken, nil
+}
+
+func (d *DB) makeAuthToken() ([]byte, error) {
+	token := make([]byte, AuthTokenSize)
+	// make a string!
+	for i := 0; i < AuthTokenSize; i++ {
+		max := big.NewInt(int64(len(AuthTokenChars)))
+		ind, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return nil, err
+		}
+		token[i] = AuthTokenChars[ind.Int64()]
+	}
+	return []byte(token), nil
 }
 
 type StringType uint

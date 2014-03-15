@@ -34,6 +34,9 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	var ctx core.CommandContext
+	ctx.Cmd = cmd
+	ctx.Args = args
 
 	// check auth token
 	token, err := util.GetArg(args, "auth_token", false, nil)
@@ -41,10 +44,9 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	authLevel := core.AuthGuest
-	var userId *uint64
+	ctx.AuthLevel = core.AuthGuest
 	if token != nil {
-		authLevel, userId, err = n.db.Authenticate([]byte(*token))
+		ctx.AuthLevel, ctx.UserId, err = n.db.Authenticate([]byte(*token))
 		if err != nil {
 			if bytes, err := json.MarshalIndent(err, "", "  "); err != nil {
 				http.Error(w, err.Error(), 500)
@@ -57,7 +59,7 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// execute command
-	result := n.core.Cmd(core.CommandContext{cmd, args, authLevel, userId})
+	result := n.core.Cmd(ctx)
 	if result.Error == core.ErrorCmdNotFound {
 		http.Error(w, result.Error.Error(), http.StatusNotFound)
 		return
