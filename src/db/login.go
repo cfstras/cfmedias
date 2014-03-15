@@ -19,9 +19,9 @@ const (
 	KeySize    = 512
 
 	// only characters easily typeable on a mobile
-	AuthTokenChars = `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`
+	AuthTokenChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	// also, not too many of them
-	AuthTokenSize = 64
+	AuthTokenSize = 16
 )
 
 func (db *DB) initLogin(c core.Core) {
@@ -81,7 +81,7 @@ func (db *DB) initLogin(c core.Core) {
 			success, authToken, err := db.Login(*name, *password)
 			if err == nil && success {
 				return core.Result{Status: core.StatusOK, Results: []interface{}{
-					map[string][]byte{"auth_token": authToken},
+					map[string]string{"auth_token": authToken},
 				}}
 			}
 			if err == nil {
@@ -127,15 +127,15 @@ func (db *DB) initLogin(c core.Core) {
 		}})
 }
 
-func (db *DB) Login(name string, password string) (success bool, authToken []byte,
-	err error) {
+func (db *DB) Login(name string, password string) (success bool,
+	authToken string, err error) {
 	user := User{}
 	err = db.dbmap.SelectOne(&user, `select * from `+UserTable+` where name = ?`, name)
 	if err != nil {
-		return false, nil, errrs.New(err.Error())
+		return false, "", errrs.New(err.Error())
 	}
 	if user.Id == 0 {
-		return false, nil, nil
+		return false, "", nil
 	}
 	salt := user.Password[:SaltSize]
 	expected := user.Password[SaltSize:]
@@ -144,7 +144,7 @@ func (db *DB) Login(name string, password string) (success bool, authToken []byt
 		//TODO add option to create new authtoken to logout all clients
 		return true, user.AuthToken, nil
 	}
-	return false, nil, nil
+	return false, "", nil
 }
 
 // Checks a given authentication token agains the database.
@@ -209,28 +209,27 @@ func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 
 // changes auth token and saves user
 // returns: new auth token and/or error.
-func (d *DB) ChangeAuthToken(user *User) ([]byte, error) {
+func (d *DB) ChangeAuthToken(user *User) (string, error) {
 	var err error
 	user.AuthToken, err = d.makeAuthToken()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	d.dbmap.Update(user)
 	return user.AuthToken, nil
 }
 
-func (d *DB) makeAuthToken() ([]byte, error) {
-	token := make([]byte, AuthTokenSize)
-	// make a string!
+func (d *DB) makeAuthToken() (string, error) {
+	token := make([]rune, AuthTokenSize)
 	for i := 0; i < AuthTokenSize; i++ {
 		max := big.NewInt(int64(len(AuthTokenChars)))
 		ind, err := rand.Int(rand.Reader, max)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		token[i] = AuthTokenChars[ind.Int64()]
+		token[i] = rune(AuthTokenChars[ind.Int64()])
 	}
-	return []byte(token), nil
+	return string(token), nil
 }
 
 type StringType uint

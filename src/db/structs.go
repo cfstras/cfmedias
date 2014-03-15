@@ -79,7 +79,7 @@ type User struct {
 	Password []byte `db:"password" json:"-"`
 
 	// Authentication token, used for sending requests
-	AuthToken []byte `db:"auth_token" json:"auth_token"`
+	AuthToken string `db:"auth_token" json:"auth_token"`
 
 	//TODO optionally add a common secret for authenticating messages via HMAC
 }
