@@ -76,7 +76,8 @@ func (c *impl) registerBaseCommands() {
 			res := make(map[string]interface{})
 			mk := func(k string, v core.Command) {
 				if ctx.AuthLevel >= v.MinAuthLevel {
-					res[k] = CmdHelp{v.Description, v.ArgsHelp}
+					res[k] = CmdHelp{v.MinAuthLevel, v.Verbs, v.Description,
+						v.ArgsHelp}
 				}
 			}
 
@@ -97,8 +98,10 @@ func (c *impl) registerBaseCommands() {
 }
 
 type CmdHelp struct {
-	Desc string
-	Args map[string]string
+	MinAuthLevel core.AuthLevel
+	Aliases      []string
+	Desc         string
+	Args         map[string]string
 }
 
 const maxUnicodeString = "\U0010FFFF"

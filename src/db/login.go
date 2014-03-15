@@ -26,13 +26,13 @@ const (
 
 func (db *DB) initLogin(c core.Core) {
 	c.RegisterCommand(core.Command{
-		[]string{"createuser"},
+		[]string{"create_user"},
 		"Creates a user in the database",
 		map[string]string{
-			"name":      "Username",
-			"email":     "E-Mail",
-			"authLevel": "User Rank: Guest(0), User(1), Admin(2), Root(3)",
-			"password":  "Password"},
+			"name":       "Username",
+			"email":      "E-Mail",
+			"auth_level": "User Rank: Guest(0), User(1), Admin(2), Root(3)",
+			"password":   "Password"},
 		core.AuthAdmin,
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args
@@ -92,12 +92,12 @@ func (db *DB) initLogin(c core.Core) {
 		}})
 
 	c.RegisterCommand(core.Command{
-		[]string{"change_auth_token", "logout"},
+		[]string{"change_authtoken", "logout"},
 		`Changes the authentication token of the user, thereby logging out all
-		clients`,
+clients`,
 		map[string]string{
 			"name": `(Optional) username of the user to log out. Leave empty to
-			use current user`,
+use current user`,
 		},
 		core.AuthUser,
 		func(ctx core.CommandContext) core.Result {
@@ -130,7 +130,8 @@ func (db *DB) initLogin(c core.Core) {
 func (db *DB) Login(name string, password string) (success bool,
 	authToken string, err error) {
 	user := User{}
-	err = db.dbmap.SelectOne(&user, `select * from `+UserTable+` where name = ?`, name)
+	err = db.dbmap.SelectOne(&user,
+		`select * from `+UserTable+` where name = ?`, name)
 	if err != nil {
 		return false, "", errrs.New(err.Error())
 	}
@@ -150,11 +151,12 @@ func (db *DB) Login(name string, password string) (success bool,
 // Checks a given authentication token agains the database.
 // On success, returns the permission level of the user and their ID
 // On failure, returns (AuthGuest, nil, error)
-func (db *DB) Authenticate(authtoken []byte) (core.AuthLevel, *uint64, error) {
+func (db *DB) Authenticate(authtoken string) (core.AuthLevel, *uint64, error) {
 	invalidErr := errrs.New("auth token invalid")
 	user := User{}
 
-	err := db.dbmap.SelectOne(&user, `select * from `+UserTable+` where auth_token = ?`, authtoken)
+	err := db.dbmap.SelectOne(&user,
+		`select * from `+UserTable+` where auth_token = ?`, authtoken)
 	if err != nil || user.Id == 0 { // not found
 		return core.AuthGuest, nil, invalidErr
 	}
@@ -166,13 +168,14 @@ func (db *DB) CreateUser(name string, email string, authLevel core.AuthLevel,
 
 	if !IsSafe(name, TypeUsername) {
 		return nil, errrs.New(`Username is invalid. Can contain a-z, 0-9,
-		                      underscore and dash, minimum 3 characters.`)
+underscore and dash, minimum 3 characters.`)
 	}
 	if !IsSafe(email, TypeEmail) {
 		return nil, errrs.New("EMail is invalid.")
 	}
 	if !IsSafe(password, TypePassword) {
-		return nil, errrs.New("Password is invalid. Must be at least 6 and at most 128 characters.")
+		return nil, errrs.New(`Password is invalid. Must be at least 6 and at
+most 128 characters.`)
 	}
 
 	// check for unique

@@ -46,14 +46,9 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx.AuthLevel = core.AuthGuest
 	if token != nil {
-		ctx.AuthLevel, ctx.UserId, err = n.db.Authenticate([]byte(*token))
+		ctx.AuthLevel, ctx.UserId, err = n.db.Authenticate(*token)
 		if err != nil {
-			if bytes, err := json.MarshalIndent(err, "", "  "); err != nil {
-				http.Error(w, err.Error(), 500)
-			} else {
-				w.Write(bytes)
-				fmt.Fprintln(w)
-			}
+			n.printResult(w, core.ResultByError(err))
 			return
 		}
 	}
@@ -64,6 +59,10 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, result.Error.Error(), http.StatusNotFound)
 		return
 	}
+	n.printResult(w, result)
+}
+
+func (n *NetCmdLine) printResult(w http.ResponseWriter, result core.Result) {
 	if bytes, err := json.MarshalIndent(result, "", "  "); err != nil {
 		http.Error(w, err.Error(), 500)
 	} else {
