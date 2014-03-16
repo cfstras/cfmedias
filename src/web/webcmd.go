@@ -6,6 +6,7 @@ import (
 	"db"
 	"encoding/json"
 	"fmt"
+	"logger"
 	"net/http"
 	"strings"
 	"util"
@@ -63,11 +64,28 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 }
 
 func (n *NetCmdLine) printResult(w http.ResponseWriter, result core.Result) {
-	if bytes, err := json.MarshalIndent(result, "", "  "); err != nil {
-		http.Error(w, err.Error(), 500)
+	if result.Error != nil {
+		logger.Log.Println("api error:", result.Status, result.Error)
+	}
+	if result.IsRaw {
+		fmt.Fprint(w, result.Status)
+		if result.Error != nil {
+			fmt.Fprintln(w, "", result.Error)
+		} else {
+			fmt.Fprintln(w)
+		}
+		if result.Results != nil {
+			for _, v := range result.Results {
+				fmt.Fprintln(w, v)
+			}
+		}
 	} else {
-		w.Write(bytes)
-		fmt.Fprintln(w)
+		if bytes, err := json.MarshalIndent(result, "", "  "); err != nil {
+			http.Error(w, err.Error(), 500)
+		} else {
+			w.Write(bytes)
+			fmt.Fprintln(w)
+		}
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errrs"
+	"fmt"
 	"math/big"
 	"regexp"
 	"util"
@@ -29,10 +30,12 @@ func (db *DB) initLogin(c core.Core) {
 		[]string{"create_user"},
 		"Creates a user in the database",
 		map[string]string{
-			"name":       "Username",
-			"email":      "E-Mail",
-			"auth_level": "User Rank: Guest(0), User(1), Admin(2), Root(3)",
-			"password":   "Password"},
+			"name":  "Username",
+			"email": "E-Mail",
+			"auth_level": fmt.Sprintf("User Rank: Guest(%d), User(%d), "+
+				"Admin(%d), Root(%d)", core.AuthGuest, core.AuthUser,
+				core.AuthAdmin, core.AuthRoot),
+			"password": "Password"},
 		core.AuthAdmin,
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args

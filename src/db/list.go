@@ -35,5 +35,5 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
 	res, err := db.dbmap.Select(Item{}, "select * from "+ItemTable)
-	return core.Result{core.StatusOK, res, err}
+	return core.Result{core.StatusOK, res, err, false}
 }

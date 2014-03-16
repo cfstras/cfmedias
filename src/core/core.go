@@ -52,6 +52,7 @@ type Result struct {
 	Status  Status        `json:"status"`
 	Results []interface{} `json:"results,omitempty"`
 	Error   error         `json:"error,omitempty"`
+	IsRaw   bool          `json:"-"`
 }
 
 var (

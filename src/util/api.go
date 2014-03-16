@@ -40,7 +40,7 @@ func CastBool(arg *string, err error) (*bool, error) {
 	}
 	casted, err := strconv.ParseBool(*arg)
 	if err != nil {
-		return nil, err
+		return nil, errrs.New(*arg + " is not boolean")
 	}
 	return &casted, nil
 }
@@ -56,7 +56,7 @@ func CastFloat(arg *string, err error) (*float32, error) {
 	}
 	casted, err := strconv.ParseFloat(*arg, 32)
 	if err != nil {
-		return nil, err
+		return nil, errrs.New(*arg + " is not a floating point")
 	}
 	smaller := float32(casted)
 	return &smaller, nil
@@ -73,8 +73,31 @@ func CastUint(arg *string, err error) (*uint, error) {
 	}
 	casted, err := strconv.ParseUint(*arg, 10, 32)
 	if err != nil {
-		return nil, err
+		return nil, errrs.New(*arg + " is not an integer")
 	}
 	smaller := uint(casted)
 	return &smaller, nil
+}
+
+// Converts a *string to a uint64.
+// Passes along errrs, if not nil.
+func CastInt64(arg *string, err error) (*int64, error) {
+	if err != nil {
+		return nil, err
+	}
+	if arg == nil {
+		return nil, nil
+	}
+	casted, err := strconv.ParseInt(*arg, 10, 64)
+	if err != nil {
+		return nil, errrs.New(*arg + " is not an integer")
+	}
+	return &casted, nil
+}
+
+func Abs(i int64) int64 {
+	if i < 0 {
+		return -i
+	}
+	return i
 }
