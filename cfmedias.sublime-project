@@ -10,7 +10,8 @@
             "env": {
                 "GOPATH": "$HOME/go:$GS_GOPATH:${project}"
             }
-        }
+        },
+        "rulers": [80]
     },
     "build_systems": [
         {
