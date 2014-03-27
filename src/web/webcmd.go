@@ -74,9 +74,13 @@ func (n *NetCmdLine) printResult(w http.ResponseWriter, result core.Result) {
 		} else {
 			fmt.Fprintln(w)
 		}
-		if result.Results != nil {
-			for _, v := range result.Results {
-				fmt.Fprintln(w, v)
+		if result.Result != nil {
+			if array, ok := result.Result.([]interface{}); ok {
+				for _, v := range array {
+					fmt.Fprintln(w, v)
+				}
+			} else {
+				fmt.Fprintln(w, result.Result)
 			}
 		}
 	} else {

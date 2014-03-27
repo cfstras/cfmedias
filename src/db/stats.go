@@ -21,7 +21,7 @@ func (d *DB) initStats(c core.Core) {
 			}
 			//TODO more stats
 			//TODO stats per user level
-			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
+			return core.Result{Status: core.StatusOK, Result: res}
 		}})
 }
 

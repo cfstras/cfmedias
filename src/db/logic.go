@@ -52,7 +52,7 @@ func (db *DB) TrackPlayed(ctx core.CommandContext) core.Result {
 		return core.Result{Status: core.StatusItemNotFound}
 	}
 	if len(tracks) > 1 {
-		return core.Result{Status: core.StatusQueryNotUnique, Results: ItemToInterfaceSlice(tracks)}
+		return core.Result{Status: core.StatusQueryNotUnique, Result: tracks}
 	}
 
 	track := tracks[0]
@@ -82,5 +82,5 @@ func (db *DB) TrackPlayed(ctx core.CommandContext) core.Result {
 		return core.Result{Status: core.StatusItemNotFound}
 	}
 
-	return core.Result{Status: core.StatusOK, Results: ItemToInterfaceSlice(tracks)}
+	return core.Result{Status: core.StatusOK, Result: tracks}
 }

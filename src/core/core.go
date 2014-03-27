@@ -49,14 +49,14 @@ const (
 )
 
 type Result struct {
-	Status  Status        `json:"status"`
-	Results []interface{} `json:"results,omitempty"`
-	Error   error         `json:"error,omitempty"`
-	IsRaw   bool          `json:"-"`
+	Status Status      `json:"status"`
+	Result interface{} `json:"result,omitempty"`
+	Error  error       `json:"error,omitempty"`
+	IsRaw  bool        `json:"-"`
 }
 
 var (
-	ResultOK = Result{Status: StatusOK, Results: nil, Error: nil}
+	ResultOK = Result{Status: StatusOK, Result: nil, Error: nil}
 
 	ErrorCmdNotFound    = errrs.New("Command not found!")
 	ErrorNotAllowed     = errrs.New("You are not allowed to do that!")

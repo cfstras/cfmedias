@@ -82,18 +82,22 @@ func (c *impl) registerBaseCommands() {
 			}
 
 			var err error
-			cmd, err := util.GetArg(ctx.Args, "c", false, err)
+			cmdArg, err := util.GetArg(ctx.Args, "c", false, err)
 			if err != nil {
 				return core.ResultByError(err)
 			}
-			if cmd != nil {
-				mk(*cmd, c.commandSet[*cmd])
+			if cmdArg != nil {
+				cmd, ok := c.commandMap[*cmdArg]
+				if !ok {
+					return core.ResultByError(core.ErrorCmdNotFound)
+				}
+				mk(*cmdArg, cmd)
 			} else {
 				for k, v := range c.commandSet {
 					mk(k, v)
 				}
 			}
-			return core.Result{Status: core.StatusOK, Results: []interface{}{res}}
+			return core.Result{Status: core.StatusOK, Result: res}
 		}})
 }
 

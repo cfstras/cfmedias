@@ -59,7 +59,7 @@ func (db *DB) initLogin(c core.Core) {
 
 			user, err := db.CreateUser(*name, *email, authLevel, *password)
 			if err == nil {
-				return core.Result{Status: core.StatusOK, Results: []interface{}{user}}
+				return core.Result{Status: core.StatusOK, Result: user}
 			}
 			return core.Result{Status: core.StatusError, Error: err}
 		}})
@@ -83,9 +83,8 @@ func (db *DB) initLogin(c core.Core) {
 
 			success, authToken, err := db.Login(*name, *password)
 			if err == nil && success {
-				return core.Result{Status: core.StatusOK, Results: []interface{}{
-					map[string]string{"auth_token": authToken},
-				}}
+				return core.Result{Status: core.StatusOK,
+					Result: map[string]string{"auth_token": authToken}}
 			}
 			if err == nil {
 				return core.Result{Status: core.StatusError,
@@ -192,7 +191,7 @@ most 128 characters.`)
 		return nil, errrs.New("User already exists!")
 	}
 
-	user := User{Name: name, AuthLevel: authLevel}
+	user := User{Name: name, EMail: email, AuthLevel: authLevel}
 
 	// create authtoken
 	user.AuthToken, err = db.makeAuthToken()
