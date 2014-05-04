@@ -18,9 +18,9 @@ type updater struct {
 }
 
 var IgnoredTypes = []string{
-	"jpg", "jpeg", "png", "gif",
-	"nfo", "m3u", "log", "sfv", "txt",
-	"cue"}
+	"jpg", "jpeg", "png", "gif", "nfo", "m3u", "log", "sfv", "txt", "cue",
+	"itc2", "html", "xml", "ipa", "asd", "plist", "itdb", "itl", "tmp", "ini",
+	"sh", "sha1", "blb"}
 
 func (d *DB) Update() {
 	// keep file base up to date
@@ -62,7 +62,7 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 		return nil
 	}
 	if info.IsDir() {
-		//log.Println("in", file)
+		//log.Log.Println("in", file)
 	} else if linked, err := filepath.EvalSymlinks(file); err != nil || file != linked {
 		if err != nil {
 			log.Log.Println("Error walking files:", err.Error())
@@ -107,6 +107,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		log.Log.Println("error reading file", path, "-", err)
 		return nil
 	}
+	defer tag.Close()
 
 	title := tag.Title()
 	artist := tag.Artist()
@@ -123,7 +124,6 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		Folder:      &Folder{Path: parent},
 		Filename:    &file,
 	}
-
 	//TODO get album, check ID etc
 
 	if err = up.tx.Insert(item); err != nil {

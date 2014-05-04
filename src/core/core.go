@@ -63,6 +63,7 @@ var (
 	ErrorNotLoggedIn    = errrs.New("You are not allowed to do that; you need to be logged in!")
 	ErrorNotImplemented = errrs.New("Sorry, this feature is not implemented yet.")
 	ErrorUserNotFound   = errrs.New("User not found!")
+	ErrorInvalidQuery   = errrs.New("Invalid Query!")
 
 	//ErrorItemNotFound = errrs.New("The requested item was not found.")
 )

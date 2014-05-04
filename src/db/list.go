@@ -2,6 +2,8 @@ package db
 
 import (
 	"core"
+	"fmt"
+	"strings"
 	"util"
 )
 
@@ -29,11 +31,27 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
 	if query != nil {
-		return core.ResultByError(core.ErrorNotImplemented)
+		res, err := db.listQuery(*query)
+		if err != nil {
+			return core.ResultByError(err)
+		}
+		return core.Result{core.StatusOK, res, err, false}
 	}
 	if tags != nil {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
 	res, err := db.dbmap.Select(Item{}, "select * from "+ItemTable)
 	return core.Result{core.StatusOK, res, err, false}
+}
+
+func (db *DB) listQuery(query string) ([]interface{}, error) {
+	if strings.ContainsAny(query, `";`) ||
+		strings.Contains(strings.ToLower(query), "union") {
+		return nil, core.ErrorInvalidQuery
+	}
+	q := "select * from " + ItemTable + " where " + query + ";"
+	fmt.Println(q)
+	res, err := db.dbmap.Select(Item{}, q)
+
+	return res, err
 }
