@@ -2,6 +2,7 @@ package db
 
 import (
 	"core"
+	"errrs"
 	"fmt"
 	"strings"
 	"util"
@@ -33,7 +34,7 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 	if query != nil {
 		res, err := db.listQuery(*query)
 		if err != nil {
-			return core.ResultByError(err)
+			return core.ResultByError(errrs.New(err.Error()))
 		}
 		return core.Result{core.StatusOK, res, err, false}
 	}
