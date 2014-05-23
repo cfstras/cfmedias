@@ -3,6 +3,7 @@ package db
 import (
 	"config"
 	"errrs"
+	"fmt"
 	"github.com/coopernurse/gorp"
 	log "logger"
 	"os"
@@ -13,8 +14,28 @@ import (
 	"taglib"
 )
 
+type entry struct {
+	folder string
+	file   string
+}
+
+const bufferSize = 128
+
 type updater struct {
-	tx *gorp.Transaction
+	tx           chan *gorp.Transaction
+	allFiles     chan entry // all files seen
+	newFiles     chan entry // files not yet in db
+	importFiles  chan entry // files to import
+	success      chan bool
+	stopStepping chan bool
+
+	// the receiving goroutine shall increment these
+	numAllFiles      int
+	numNewFiles      int
+	numImportFiles   int
+	numInvalidFiles  int
+	numFailedFiles   int
+	numImportedFiles int
 }
 
 var IgnoredTypes = []string{
@@ -24,17 +45,17 @@ var IgnoredTypes = []string{
 
 func (d *DB) Update() {
 	// keep file base up to date
-	path := config.Current.MediaPath
-	if strings.Contains(path, "~") {
+	searchPath := config.Current.MediaPath
+	if strings.Contains(searchPath, "~") {
 		user, err := osuser.Current()
 		if err != nil {
 			log.Log.Println("Error getting user home directory:", err)
 			return
 		}
-		path = strings.Replace(path, "~", user.HomeDir, -1)
+		searchPath = strings.Replace(searchPath, "~", user.HomeDir, -1)
 	}
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		log.Log.Println("Error: Music path", path, "does not exist!")
+	if _, err := os.Stat(searchPath); os.IsNotExist(err) {
+		log.Log.Println("Error: Music path", searchPath, "does not exist!")
 		return
 	}
 	tx, err := d.dbmap.Begin()
@@ -42,17 +63,108 @@ func (d *DB) Update() {
 		log.Log.Println("Could not start db transaction")
 		return
 	}
-	up := &updater{tx}
-	err = filepath.Walk(path, up.step)
-	if err != nil {
-		log.Log.Println("Updater error:", err)
-		if err = up.tx.Commit(); err != nil {
-			log.Log.Println("rollback error:", err)
+	up := &updater{tx: make(chan *gorp.Transaction, 1),
+		allFiles:     make(chan entry, bufferSize),
+		newFiles:     make(chan entry, bufferSize),
+		importFiles:  make(chan entry, bufferSize),
+		success:      make(chan bool),
+		stopStepping: make(chan bool, 1)}
+	up.tx <- tx
+
+	go func() {
+		err := filepath.Walk(searchPath, up.step)
+		if err != nil {
+			log.Log.Println("Updater error:", err)
 		}
-	} else if err = up.tx.Commit(); err != nil {
-		log.Log.Println("Updater error:", err)
+		close(up.allFiles)
+	}()
+
+	go func(input, output chan entry) {
+		for entry := range input {
+			up.numAllFiles++
+			//fmt.Println("suffix filter gets:", entry)
+			do := true
+			for _, v := range IgnoredTypes {
+				if strings.HasSuffix(entry.file, v) {
+					//TODO do something with the cover jpgs
+					do = false
+					break
+				}
+			}
+			if do {
+				output <- entry
+			}
+		}
+		close(output)
+	}(up.allFiles, up.importFiles)
+
+	go func(input, output chan entry) {
+		for entry := range input {
+			up.numImportFiles++
+			//fmt.Println("seen filter gets:", entry)
+			// check if we already did this one
+			itemPath := ItemPathView{}
+			tx := <-up.tx
+			if err := tx.SelectOne(&itemPath,
+				`select item_id Id, filename Filename, path Path
+				from `+ItemTable+`
+				join `+FolderTable+` on `+FolderTable+`.folder_id = `+ItemTable+`.folder_id
+				where filename = ?
+				and path = ?`,
+				entry.file, entry.folder); err != nil {
+				fmt.Println("sql error:", err)
+				up.success <- false
+			}
+			up.tx <- tx
+			if itemPath.Id != 0 {
+				// this one is already in the db
+				//TODO check if the tags have changed anyway
+				//log.Log.Println("skipping", path)
+			} else {
+				output <- entry
+			}
+		}
+		close(output)
+	}(up.importFiles, up.newFiles)
+
+	go func(input chan entry, success chan bool) {
+		for entry := range input {
+			up.numNewFiles++
+			err := up.analyze(path.Join(entry.folder, entry.file),
+				entry.folder, entry.file)
+			if err != nil {
+				up.numFailedFiles++
+				fmt.Println("import error: ", err)
+			}
+		}
+		up.success <- true
+		close(up.success)
+	}(up.newFiles, up.success)
+
+	success := true
+	for v := range up.success {
+		if !v {
+			up.stopStepping <- true
+			success = false
+			break
+			if err = tx.Rollback(); err != nil {
+				log.Log.Println("rollback error:", err)
+			}
+		}
 	}
-	log.Log.Println("Filebase updated.")
+	if success {
+		tx := <-up.tx
+		if err = tx.Commit(); err != nil {
+			log.Log.Println("Updater error:", err)
+		}
+	}
+	log.Log.Println("Filebase updated:\n",
+		"Total Files:        ", up.numAllFiles,
+		"\nNon-ignored Files:", up.numImportFiles,
+		"\nNew Files:        ", up.numNewFiles,
+		"\nImported Files:   ", up.numImportedFiles,
+		"\nInvalid/Non-media:", up.numInvalidFiles,
+		"\nFailed Files:     ", up.numFailedFiles)
 }
 
 func (up *updater) step(file string, info os.FileInfo, err error) error {
@@ -70,43 +182,25 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 		}
 		filepath.Walk(linked, up.step)
 	} else {
-		//log.Log.Println("at", file)
-		if err := up.analyze(file, path.Dir(file), info.Name()); err != nil {
-			log.Log.Println("analyze error", err)
-			return err
+		select {
+		case <-up.stopStepping:
+			return errrs.New("aborting")
+		case up.allFiles <- entry{path.Dir(file), info.Name()}:
 		}
 	}
 	return nil
 }
 
 func (up *updater) analyze(path string, parent string, file string) error {
-	// check if we already did this one
-	itemPath := ItemPathView{}
-	if err := up.tx.SelectOne(&itemPath,
-		`select item_id Id, filename Filename, path Path
-		from `+ItemTable+`
-		join `+FolderTable+` on `+FolderTable+`.folder_id = `+ItemTable+`.folder_id
-		where filename = ?
-		and path = ?`,
-		file, parent); err != nil {
-		return err
-	}
-	if itemPath.Id != 0 {
-		// this one is already in the db
-		//TODO check if the tags have changed anyway
-		return nil
-	}
+	//log.Log.Println("doing", path)
 
 	tag, err := taglib.Read(path)
 	if err != nil {
-		for _, v := range IgnoredTypes {
-			if strings.HasSuffix(file, v) {
-				return nil //TODO do something with the covers
-			}
-		}
 		log.Log.Println("error reading file", path, "-", err)
+		up.numInvalidFiles++
 		return nil
 	}
+
 	defer tag.Close()
 
 	title := tag.Title()
@@ -126,10 +220,14 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	}
 	//TODO get album, check ID etc
 
-	if err = up.tx.Insert(item); err != nil {
+	tx := <-up.tx
+	err = tx.Insert(item)
+	up.tx <- tx
+	if err != nil {
 		log.Log.Println("error inserting item", item, err)
-		return err
+	} else {
+		up.numImportedFiles++
+		//log.Log.Println("inserted", item)
 	}
-	log.Log.Println("inserted", item)
-	return nil
+	return err
 }
