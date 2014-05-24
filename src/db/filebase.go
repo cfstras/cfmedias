@@ -158,8 +158,8 @@ func (d *DB) Update() {
 			log.Log.Println("Updater error:", err)
 		}
 	}
-	log.Log.Println("Filebase updated:\n",
-		"Total Files:        ", up.numAllFiles,
+	log.Log.Println("Filebase updated:",
+		"\nTotal Files:      ", up.numAllFiles,
 		"\nNon-ignored Files:", up.numImportFiles,
 		"\nNew Files:        ", up.numNewFiles,
 		"\nImported Files:   ", up.numImportedFiles,
