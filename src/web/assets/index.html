@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="/ico/favicon.ico">
+	<title>cfmedias</title>
+
+	<link href="/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/css/main.css" rel="stylesheet">
+
+	<script>
+		apiurl = {{.ApiPath}}
+	</script>
+</head>
+<body>
+<div id="wrap">
+	<div class="mediabar clearfix">
+		<span class="topbar">Media</span>
+		Media goes here...
+	</div>
+
+	<div class="commandbar clearfix">
+		<span class="topbar">Commands</span>
+		<dl id="cmdlist">
+		</dl>
+	</div>
+
+	<div class="content">
+		<div class="locationbar">
+			<span class="topbar location home">Home</span>
+		</div>
+
+		<div class="results table">
+			<table>
+			<thead>
+			<td>Row 1</td><td>Row 2</td><td>Row 3</td>
+			</thead>
+			<tr>
+				<td>Results</td>
+				<td>go</td>
+				<td>here...</td>
+			</tr>
+			<tr>
+				<td>Results</td>
+				<td>go</td>
+				<td>here...</td>
+			</tr>
+			</table>
+		</div>
+	</div>
+</div>
+
+<script src="/js/jquery-2.1.1.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
