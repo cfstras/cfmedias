@@ -5,16 +5,29 @@ import (
 	"core"
 	"db"
 	"encoding/json"
+	"errrs"
 	"fmt"
-	"logger"
+	"html/template"
+	log "logger"
+	"mime"
 	"net/http"
+	_ "net/http/pprof"
 	"strings"
 	"util"
 )
 
+var allowedTemplates = []string{".html"}
+
 type NetCmdLine struct {
-	core core.Core
-	db   *db.DB
+	core       core.Core
+	db         *db.DB
+	renderInfo WebTemplate
+	templates  map[string]*template.Template
+}
+
+// context information for web templates
+type WebTemplate struct {
+	ApiPath string
 }
 
 func (n *NetCmdLine) getCmd(r *http.Request) (err error, cmd string, args core.ArgMap) {
@@ -22,7 +35,7 @@ func (n *NetCmdLine) getCmd(r *http.Request) (err error, cmd string, args core.A
 	parts := strings.Split(path, "/")
 	// ignore parts[2:]
 	if err := r.ParseForm(); err != nil {
-		return err, "", nil
+		return errrs.New("bad request: " + err.Error()), "", nil
 	}
 
 	return nil, parts[1], core.ArgMap(r.Form)
@@ -65,7 +78,7 @@ func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
 
 func (n *NetCmdLine) printResult(w http.ResponseWriter, result core.Result) {
 	if result.Error != nil {
-		logger.Log.Println("api error:", result.Status, result.Error)
+		log.Log.Println("api error:", result.Status, result.Error)
 	}
 	if result.IsRaw {
 		fmt.Fprint(w, result.Status)
@@ -93,10 +106,82 @@ func (n *NetCmdLine) printResult(w http.ResponseWriter, result core.Result) {
 	}
 }
 
+func (n *NetCmdLine) serveAsset(w http.ResponseWriter, r *http.Request) {
+	r.URL.Path = strings.TrimLeft(r.URL.Path, "/")
+	if r.URL.Path == "" {
+		r.URL.Path = "index.html"
+	}
+
+	cache := false
+	templateAble := false
+	for _, suffix := range allowedTemplates {
+		if strings.HasSuffix(r.URL.Path, suffix) {
+			cache = config.Current.CacheWebTemplates
+			templateAble = true
+			break
+		}
+	}
+	if templateAble {
+		var tmpl *template.Template
+		if cache {
+			tmpl = n.templates[r.URL.Path]
+		}
+		if tmpl == nil {
+			data, err := Asset(r.URL.Path)
+			if len(data) == 0 || err != nil {
+				//TODO handle 404's more nicely
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprintln(w, err)
+				return
+			}
+			tmpl, err = template.New(r.URL.Path).Parse(string(data))
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintln(w, err)
+				log.Log.Println(err)
+				return
+			}
+			n.templates[r.URL.Path] = tmpl
+		}
+		n.setMime(w, r)
+		err := tmpl.Execute(w, n.renderInfo)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, err)
+			log.Log.Println(err)
+		}
+	} else {
+		data, err := Asset(r.URL.Path)
+		if len(data) == 0 || err != nil {
+			//TODO handle 404's more nicely
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, err)
+			return
+		}
+		n.setMime(w, r)
+		_, err = w.Write(data)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, err)
+		}
+	}
+}
+
+func (n *NetCmdLine) setMime(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", mime.TypeByExtension(r.URL.Path[strings.LastIndex(r.URL.Path, "."):]))
+}
+
 func (n *NetCmdLine) Start(core core.Core, db *db.DB) {
 	n.core = core
 	n.db = db
+	n.templates = make(map[string]*template.Template)
+	//TODO insert hostname here
+	n.renderInfo = WebTemplate{
+		ApiPath: fmt.Sprintf("http://localhost:%d/api/", config.Current.WebPort),
+	}
+
 	http.HandleFunc("/api/", n.api)
+	http.HandleFunc("/", n.serveAsset)
 	url := fmt.Sprint(":", config.Current.WebPort)
 	http.ListenAndServe(url, nil)
 }

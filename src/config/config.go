@@ -8,9 +8,10 @@ import (
 )
 
 type Configuration struct {
-	DbFile    string
-	MediaPath string
-	WebPort   uint
+	DbFile            string
+	MediaPath         string
+	WebPort           uint
+	CacheWebTemplates bool
 
 	ListenedUpperThreshold float32
 	ListenedLowerThreshold float32
@@ -26,6 +27,7 @@ func Init() {
 		DbFile:                 "db.sqlite",
 		MediaPath:              "~/Music",
 		WebPort:                38888,
+		CacheWebTemplates:      true,
 		ListenedUpperThreshold: 0.7,
 		ListenedLowerThreshold: 0.3,
 	}
