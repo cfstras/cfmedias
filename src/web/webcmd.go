@@ -5,11 +5,9 @@ import (
 	"config"
 	"core"
 	"db"
-	"errrs"
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
-	"html/template"
 	"mime"
 	"net/http"
 	_ "net/http/pprof"
@@ -21,27 +19,16 @@ import (
 var allowedTemplates = []string{".html"}
 
 type NetCmdLine struct {
-	core       core.Core
-	db         *db.DB
-	martini    *martini.ClassicMartini
-	renderInfo WebTemplate
-	templates  map[string]*template.Template
+	core    core.Core
+	db      *db.DB
+	martini *martini.ClassicMartini
 }
 
-// context information for web templates
-type WebTemplate struct {
-	ApiPath string
-}
-
-func (n *NetCmdLine) api(params martini.Params, r render.Render, req *http.Request) (
+func (n *NetCmdLine) api(params martini.Params, r render.Render, req *http.Request, args core.ArgMap) (
 	int, string) {
-	if err := req.ParseForm(); err != nil {
-		return http.StatusBadRequest, "bad request: " + err.Error()
-	}
-
 	var ctx core.CommandContext
 	ctx.Cmd = params["cmd"]
-	ctx.Args = core.ArgMap(req.Form)
+	ctx.Args = args
 
 	// check auth token
 	token, err := util.GetArg(ctx.Args, "auth_token", false, nil)
@@ -82,14 +69,9 @@ func (n *NetCmdLine) api(params martini.Params, r render.Render, req *http.Reque
 	}
 }
 
-func (n *NetCmdLine) Start(core core.Core, db *db.DB) {
-	n.core = core
+func (n *NetCmdLine) Start(coreInstance core.Core, db *db.DB) {
+	n.core = coreInstance
 	n.db = db
-	n.templates = make(map[string]*template.Template)
-	//TODO insert hostname here
-	n.renderInfo = WebTemplate{
-		ApiPath: fmt.Sprintf("http://localhost:%d/api/", config.Current.WebPort),
-	}
 
 	m := martini.Classic()
 	n.martini = m
@@ -98,6 +80,12 @@ func (n *NetCmdLine) Start(core core.Core, db *db.DB) {
 	m.Group("/api", func(r martini.Router) {
 		r.Get("/:cmd", n.api)
 		r.Post("/:cmd", n.api)
+	}, func(c martini.Context, r *http.Request, w http.ResponseWriter) {
+		if err := r.ParseForm(); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, "bad request:", err)
+		}
+		c.Map(core.ArgMap(r.Form))
 	})
 
 	m.Use(func(c martini.Context, r *http.Request) {

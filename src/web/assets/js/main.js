@@ -53,7 +53,7 @@ function handleRes(cmd, res) {
 }
 
 function handleLogin(res) {
-	if (res.status !== "OK") {
+	if (!res.auth_token) {
 		console.error(res)
 		return
 	}
