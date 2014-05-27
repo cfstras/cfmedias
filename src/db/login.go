@@ -16,7 +16,7 @@ import (
 const (
 	// Settings for the stored hash, PBKDF2
 	SaltSize   = 128
-	Iterations = 10000
+	Iterations = 2000
 	KeySize    = 512
 
 	// only characters easily typeable on a mobile
