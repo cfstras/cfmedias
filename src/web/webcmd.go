@@ -1,17 +1,21 @@
 package web
 
 import (
+	"bytes"
 	"config"
 	"core"
 	"db"
 	"encoding/json"
 	"errrs"
 	"fmt"
+	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
 	"html/template"
 	log "logger"
 	"mime"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 	"strings"
 	"util"
 )
@@ -21,6 +25,7 @@ var allowedTemplates = []string{".html"}
 type NetCmdLine struct {
 	core       core.Core
 	db         *db.DB
+	martini    *martini.ClassicMartini
 	renderInfo WebTemplate
 	templates  map[string]*template.Template
 }
@@ -41,39 +46,53 @@ func (n *NetCmdLine) getCmd(r *http.Request) (err error, cmd string, args core.A
 	return nil, parts[1], core.ArgMap(r.Form)
 }
 
-func (n *NetCmdLine) api(w http.ResponseWriter, r *http.Request) {
-	// get command name from url
-	err, cmd, args := n.getCmd(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+func (n *NetCmdLine) api(params martini.Params, r render.Render, req *http.Request) (
+	int, string) {
+	if err := req.ParseForm(); err != nil {
+		return http.StatusBadRequest, "bad request: " + err.Error()
 	}
+
 	var ctx core.CommandContext
-	ctx.Cmd = cmd
-	ctx.Args = args
+	ctx.Cmd = params["cmd"]
+	ctx.Args = core.ArgMap(req.Form)
 
 	// check auth token
-	token, err := util.GetArg(args, "auth_token", false, nil)
+	token, err := util.GetArg(ctx.Args, "auth_token", false, nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return http.StatusBadRequest, err.Error()
 	}
 	ctx.AuthLevel = core.AuthGuest
 	if token != nil {
 		ctx.AuthLevel, ctx.UserId, err = n.db.Authenticate(*token)
 		if err != nil {
-			n.printResult(w, core.ResultByError(err))
-			return
+			return http.StatusUnauthorized, err.Error()
 		}
 	}
 
 	// execute command
 	result := n.core.Cmd(ctx)
 	if result.Error == core.ErrorCmdNotFound {
-		http.Error(w, result.Error.Error(), http.StatusNotFound)
-		return
+		return http.StatusNotFound, result.Error.Error()
 	}
-	n.printResult(w, result)
+	if result.Error != nil {
+		return http.StatusInternalServerError, result.Error.Error()
+	}
+	if result.IsRaw {
+		str := &bytes.Buffer{}
+		if result.Result != nil {
+			if array, ok := result.Result.([]interface{}); ok {
+				for _, v := range array {
+					fmt.Fprintln(str, v)
+				}
+			} else {
+				fmt.Fprintln(str, result.Result)
+			}
+		}
+		return 200, str.String()
+	} else {
+		r.JSON(200, result.Result)
+		return 200, ""
+	}
 }
 
 func (n *NetCmdLine) printResult(w http.ResponseWriter, result core.Result) {
@@ -180,8 +199,18 @@ func (n *NetCmdLine) Start(core core.Core, db *db.DB) {
 		ApiPath: fmt.Sprintf("http://localhost:%d/api/", config.Current.WebPort),
 	}
 
-	http.HandleFunc("/api/", n.api)
-	http.HandleFunc("/", n.serveAsset)
-	url := fmt.Sprint(":", config.Current.WebPort)
-	http.ListenAndServe(url, nil)
+	m := martini.Classic()
+	n.martini = m
+	m.Use(render.Renderer())
+	m.Group("/api", func(r martini.Router) {
+		r.Get("/:cmd", n.api)
+		r.Post("/:cmd", n.api)
+	})
+	m.Get("/", index_html)
+	m.Get("/js/**", n.serveAsset)
+	m.Get("/css/**", n.serveAsset)
+	m.Get("/fonts/**", n.serveAsset)
+
+	os.Setenv("PORT", fmt.Sprint(config.Current.WebPort))
+	m.Run()
 }

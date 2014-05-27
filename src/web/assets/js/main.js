@@ -8,13 +8,10 @@ $(document).ready(function() {
 
 function handleHelp(res) {
 	console.log(res)
-	if (!res.result) {
-		return
-	}
 	var $cmdlist = $('#cmdlist')
 	$cmdlist.html('')
-	for (x in res.result) {
-		var cmd = res.result[x];
+	for (x in res) {
+		var cmd = res[x];
 		var dt = $('<dt>'+x+'</dt>')
 		var dd = $('<dd>'+cmd.Desc+'<br></dd>')
 		for (arg in cmd.Args) {
@@ -60,7 +57,7 @@ function handleLogin(res) {
 		console.error(res)
 		return
 	}
-	stuff.authToken = res.result.auth_token
+	stuff.authToken = res.auth_token
 	req("help", null, handleHelp)
 }
 
