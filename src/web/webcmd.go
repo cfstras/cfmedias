@@ -24,8 +24,7 @@ type NetCmdLine struct {
 	martini *martini.ClassicMartini
 }
 
-func (n *NetCmdLine) api(params martini.Params, r render.Render,
-	ctx *core.CommandContext) (int, string) {
+func (n *NetCmdLine) api(r render.Render, ctx *core.CommandContext) (int, string) {
 	// execute command
 	result := n.core.Cmd(*ctx)
 	if result.Error == core.ErrorCmdNotFound {
