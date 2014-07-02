@@ -2,8 +2,7 @@ package db
 
 func (d *DB) GetUserByName(name string) (*User, error) {
 	var user User
-	err := d.dbmap.SelectOne(&user,
-		`select * from `+UserTable+` where name = ?`, name)
+	err := d.db.Where("name = ?", name).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -11,10 +10,10 @@ func (d *DB) GetUserByName(name string) (*User, error) {
 }
 
 func (d *DB) GetUser(uid uint64) (*User, error) {
-	u, err := d.dbmap.Get(User{}, uid)
+	var u User
+	err := d.db.First(u, uid).Error
 	if err != nil {
 		return nil, err
 	}
-	user := u.(User)
-	return &user, nil
+	return &u, nil
 }

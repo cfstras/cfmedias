@@ -18,32 +18,26 @@ func (db *DB) GetItem(args core.ArgMap) ([]*Item, error) {
 		return nil, err
 	}
 
-	qArgs := []interface{}{title, artist} // never nil, because force is true for them
+	limit := map[string]interface{}{"title": title, "artist": artist}
 
-	q := `select * from ` + ItemTable + `
-		where title = ? and artist = ? `
 	if album != nil {
-		q += `and album = ? `
-		qArgs = append(qArgs, album)
+		limit["album"] = album
 	}
 	if album_artist != nil && false { //TODO album-artists are not implemented yet
-		q += `and album_artist = ? `
-		qArgs = append(qArgs, album_artist)
+		limit["album_artist"] = album_artist
 	}
 	//TODO mbid is not implemented. If given, only search mbid.
 	/*if musicbrainz_id != nil {
-		q += `and musicbrainz_id = ? `
-		qArgs = append(qArgs, musicbrainz_id)
+		limit["musicbrainz_id"] = musicbrainz_id
 	}*/
 
-	// get track info
-	//TODO get DB write lock!
-	tracks, err := db.dbmap.Select(Item{}, q, qArgs...)
+	tracks := make([]*Item, 0)
+	err = db.db.Where(limit).Find(tracks).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return InterfaceToItemSlice(tracks), nil
+	return tracks, nil
 }
 
 func InterfaceToItemSlice(slice []interface{}) []*Item {

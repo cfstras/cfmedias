@@ -4,7 +4,7 @@ import (
 	"config"
 	"errrs"
 	"fmt"
-	"github.com/coopernurse/gorp"
+	"github.com/jinzhu/gorm"
 	log "logger"
 	"os"
 	osuser "os/user"
@@ -15,14 +15,14 @@ import (
 )
 
 type entry struct {
-	folder string
-	file   string
+	Path     string
+	Filename string
 }
 
 const bufferSize = 128
 
 type updater struct {
-	tx           chan *gorp.Transaction
+	tx           chan *gorm.DB
 	allFiles     chan entry // all files seen
 	newFiles     chan entry // files not yet in db
 	importFiles  chan entry // files to import
@@ -58,12 +58,8 @@ func (d *DB) Update() {
 		log.Log.Println("Error: Music path", searchPath, "does not exist!")
 		return
 	}
-	tx, err := d.dbmap.Begin()
-	if err != nil {
-		log.Log.Println("Could not start db transaction")
-		return
-	}
-	up := &updater{tx: make(chan *gorp.Transaction, 1),
+	tx := d.db.Begin()
+	up := &updater{tx: make(chan *gorm.DB, 1),
 		allFiles:     make(chan entry, bufferSize),
 		newFiles:     make(chan entry, bufferSize),
 		importFiles:  make(chan entry, bufferSize),
@@ -85,7 +81,7 @@ func (d *DB) Update() {
 			//fmt.Println("suffix filter gets:", entry)
 			do := true
 			for _, v := range IgnoredTypes {
-				if strings.HasSuffix(entry.file, v) {
+				if strings.HasSuffix(entry.Filename, v) {
 					//TODO do something with the cover jpgs
 					do = false
 					break
@@ -105,21 +101,23 @@ func (d *DB) Update() {
 			// check if we already did this one
 			itemPath := ItemPathView{}
 			tx := <-up.tx
-			if err := tx.SelectOne(&itemPath,
-				`select item_id Id, filename Filename, path Path
-				from `+ItemTable+`
-				join `+FolderTable+` on `+FolderTable+`.folder_id = `+ItemTable+`.folder_id
-				where filename = ?
-				and path = ?`,
-				entry.file, entry.folder); err != nil {
+			rows, err := d.db.Table(ItemTable).
+				Select(ItemTable + ".item_id, " +
+				ItemTable + ".filename, " +
+				ItemTable + ".path").
+				Joins("join " + FolderTable + " on " +
+				FolderTable + ".folder_id = " + ItemTable + ".folder_id").
+				Where(entry).
+				Rows()
+			if err != nil {
 				fmt.Println("sql error:", err)
 				up.success <- false
 			}
 			up.tx <- tx
-			if itemPath.Id != 0 {
+			if rows.Next() {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
-				//log.Log.Println("skipping", path)
+				log.Log.Println("skipping", entry)
 			} else {
 				output <- entry
 			}
@@ -130,8 +128,8 @@ func (d *DB) Update() {
 	go func(input chan entry, success chan bool) {
 		for entry := range input {
 			up.numNewFiles++
-			err := up.analyze(path.Join(entry.folder, entry.file),
-				entry.folder, entry.file)
+			err := up.analyze(path.Join(entry.Path, entry.Filename),
+				entry.Path, entry.Filename)
 			if err != nil {
 				up.numFailedFiles++
 				fmt.Println("import error: ", err)
@@ -147,14 +145,14 @@ func (d *DB) Update() {
 			up.stopStepping <- true
 			success = false
 			break
-			if err = tx.Rollback(); err != nil {
+			if err := tx.Rollback(); err != nil {
 				log.Log.Println("rollback error:", err)
 			}
 		}
 	}
 	if success {
 		tx := <-up.tx
-		if err = tx.Commit(); err != nil {
+		if err := tx.Commit(); err != nil {
 			log.Log.Println("Updater error:", err)
 		}
 	}
@@ -221,7 +219,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	//TODO get album, check ID etc
 
 	tx := <-up.tx
-	err = tx.Insert(item)
+	err = tx.Save(item).Error
 	up.tx <- tx
 	if err != nil {
 		log.Log.Println("error inserting item", item, err)

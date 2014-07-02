@@ -3,35 +3,31 @@ package db
 import (
 	"config"
 	"core"
-	"database/sql"
 	"errrs"
-	"github.com/coopernurse/gorp"
-	"github.com/go-contrib/uuid"
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
-	log "logger"
 )
 
 type DB dbstruct
 
 type dbstruct struct {
-	dbmap *gorp.DbMap
-	guid  string
+	db   gorm.DB
+	open bool
 }
 
 func (d *DB) Open(c core.Core) error {
-	if d.dbmap != nil {
+	if d.open {
 		return errrs.New("DB is already opened!")
 	}
 
 	var err error
 	file := config.Current.DbFile
-	db, err := sql.Open("sqlite3", file)
+
+	d.db, err = gorm.Open("sqlite3", file)
 	if err != nil {
 		return err
 	}
-
-	d.dbmap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-	//dbmap.TraceOn("[db]", log.Log)
+	d.open = true
 
 	if err := d.checkTables(); err != nil {
 		return err
@@ -62,65 +58,18 @@ func (d *DB) Open(c core.Core) error {
 }
 
 func (d *DB) Close() error {
-	if d.dbmap == nil {
+	if !d.open {
 		return errrs.New("DB is not open!")
 	}
-	return d.dbmap.Db.Close()
+	return d.db.Close()
 }
 
 // checks db schema and tables
 func (d *DB) checkTables() error {
-	//TODO replace this with gorp
-	qu := `create table if not exists
-	cfmedias
-	(guid varchar(34) not null primary key, locked bool)`
-	_, err := d.dbmap.Db.Exec(qu)
-	if err != nil {
-		log.Log.Println("SQL error", err, "at query:", qu)
-		return err
-	}
-
-	qu = `select guid, locked from cfmedias`
-	res, err := d.dbmap.Db.Query(qu)
-	if err != nil {
-		log.Log.Println("SQL error", err, "at query:", qu)
-		return err
-	}
-
-	if res.Next() {
-		var guidRead string
-		var locked bool
-		err = res.Scan(&guidRead, &locked)
-		if err != nil {
-			return err
-		}
-		d.guid = guidRead
-		log.Log.Println("Database loaded with GUID", d.guid)
-		//TODO set locked
-	} else {
-		d.guid = uuid.NewV4().String()
-		locked := true
-
-		qu = `insert into cfmedias values (?, ?)`
-		_, err := d.dbmap.Db.Exec(qu, d.guid, locked)
-		if err != nil {
-			log.Log.Println("SQL error", err, "at query:", qu)
-			return err
-		}
-		log.Log.Println("Database created with GUID", d.guid)
-	}
-	res.Close()
-
-	d.dbmap.AddTableWithName(Item{}, ItemTable).SetKeys(true, "Id")
-	//dbmap.AddTableWithName(Album{}, "albums").SetKeys(true, "Id")
-	d.dbmap.AddTableWithName(Folder{}, FolderTable).SetKeys(true, "Id")
-	d.dbmap.AddTableWithName(User{}, UserTable).SetKeys(true, "Id")
-
-	err = d.dbmap.CreateTablesIfNotExists()
-	if err != nil {
-		log.Log.Println("Could not create database tables!")
-		return err
-	}
+	d.db.AutoMigrate(Item{})
+	//db.AutoMigrate(Album{})
+	d.db.AutoMigrate(Folder{})
+	d.db.AutoMigrate(User{})
 
 	return nil
 }
