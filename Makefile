@@ -6,6 +6,16 @@ export GOPATH
 
 BINDATA := bin/go-bindata
 
+FOLDERS := src/config \
+	src/core \
+	src/coreimpl \
+	src/db \
+	src/errrs \
+	src/logger \
+	src/main \
+	src/util \
+	src/web
+
 all: build
 
 release: bindata compile
@@ -15,6 +25,10 @@ build: bindata-debug compile
 compile:
 	mkdir -p bin
 	go build -o bin/cfmedias main
+
+.PHONY: fix
+fix:
+	goimports -l -w $(FOLDERS)
 
 BINDATA_DIRS = src/web/assets src/web/assets/css src/web/assets/js src/web/assets/fonts
 BINDATA_FLAGS = -o=src/web/bindata.go -pkg=web -prefix src/web/assets $(BINDATA_DIRS)
@@ -38,14 +52,17 @@ start:
 	bin/cfmedias
 
 deps:
-	go get github.com/mattn/go-sqlite3
-	go get github.com/go-contrib/uuid
-	go get code.google.com/p/portaudio-go/portaudio
-	go get github.com/coopernurse/gorp
-	go get github.com/peterh/liner
-	go get code.google.com/p/go.crypto/pbkdf2
-	go get github.com/jteeuwen/go-bindata/...
-	go get github.com/go-martini/martini
-	go get github.com/martini-contrib/render
+	go get github.com/mattn/go-sqlite3 \
+	github.com/go-contrib/uuid \
+	code.google.com/p/portaudio-go/portaudio \
+	github.com/peterh/liner \
+	code.google.com/p/go.crypto/pbkdf2 \
+	github.com/jteeuwen/go-bindata/... \
+	github.com/go-martini/martini \
+	github.com/martini-contrib/render \
+	github.com/jinzhu/gorm
+
+devdeps: deps
+	go get code.google.com/p/go.tools/cmd/goimports
 
 	@echo please install portaudio1.9-dev and libtagc0-dev with your package manager
