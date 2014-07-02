@@ -28,7 +28,7 @@ type CommandContext struct {
 	Args ArgMap // arguments of the request
 
 	AuthLevel AuthLevel // permission level of current user
-	UserId    *uint64   // logged in User ID or nil
+	UserId    *int64    // logged in User ID or nil
 }
 
 type Command struct {

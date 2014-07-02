@@ -9,7 +9,7 @@ func (d *DB) GetUserByName(name string) (*User, error) {
 	return &user, nil
 }
 
-func (d *DB) GetUser(uid uint64) (*User, error) {
+func (d *DB) GetUser(uid int64) (*User, error) {
 	var u User
 	err := d.db.First(u, uid).Error
 	if err != nil {

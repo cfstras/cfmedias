@@ -132,8 +132,7 @@ use current user`,
 func (db *DB) Login(name string, password string) (success bool,
 	authToken string, err error) {
 	user := User{}
-	err = db.dbmap.SelectOne(&user,
-		`select * from `+UserTable+` where name = ?`, name)
+	err = db.db.Where("name = ?", name).Find(&user).Error
 	if err != nil {
 		return false, "", errrs.New(err.Error())
 	}
@@ -153,12 +152,10 @@ func (db *DB) Login(name string, password string) (success bool,
 // Checks a given authentication token agains the database.
 // On success, returns the permission level of the user and their ID
 // On failure, returns (AuthGuest, nil, error)
-func (db *DB) Authenticate(authtoken string) (core.AuthLevel, *uint64, error) {
+func (db *DB) Authenticate(authtoken string) (core.AuthLevel, *int64, error) {
 	invalidErr := errrs.New("auth token invalid")
 	user := User{}
-
-	err := db.dbmap.SelectOne(&user,
-		`select * from `+UserTable+` where auth_token = ?`, authtoken)
+	err := db.db.Where("auth_token = ?", authtoken).Find(&user)
 	if err != nil || user.Id == 0 { // not found
 		return core.AuthGuest, nil, invalidErr
 	}
@@ -181,9 +178,8 @@ most 128 characters.`)
 	}
 
 	// check for unique
-	num, err := db.dbmap.SelectInt(`select count(*) from `+UserTable+
-		` where name = ?`, name)
-
+	var num uint64
+	err := db.db.Table(UserTable).Where("name = ?", name).Count(&num).Error
 	if err != nil {
 		return nil, errrs.New("Error checking username: " + err.Error())
 	}
@@ -191,7 +187,7 @@ most 128 characters.`)
 		return nil, errrs.New("User already exists!")
 	}
 
-	user := User{Name: name, EMail: email, AuthLevel: authLevel}
+	user := User{Name: name, Email: email, AuthLevel: authLevel}
 
 	// create authtoken
 	user.AuthToken, err = db.makeAuthToken()
@@ -203,7 +199,7 @@ most 128 characters.`)
 	user.Password = MakePassword([]byte(password))
 
 	// store user
-	err = db.dbmap.Insert(&user)
+	err = db.db.Save(&user).Error
 
 	if err != nil {
 		return nil, errrs.New("Could not insert user: " + err.Error())
@@ -220,7 +216,7 @@ func (d *DB) ChangeAuthToken(user *User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	d.dbmap.Update(user)
+	d.db.Save(user)
 	return user.AuthToken, nil
 }
 

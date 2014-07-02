@@ -3,7 +3,6 @@ package db
 import (
 	"core"
 	"errrs"
-	"fmt"
 	"strings"
 	"util"
 )
@@ -41,7 +40,10 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 	if tags != nil {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
-	res, err := db.dbmap.Select(Item{}, "select * from "+ItemTable)
+
+	res := make([]interface{}, 0)
+	err = db.db.Table(ItemTable).Find(res).Error
+
 	return core.Result{core.StatusOK, res, err, false}
 }
 
@@ -50,9 +52,8 @@ func (db *DB) listQuery(query string) ([]interface{}, error) {
 		strings.Contains(strings.ToLower(query), "union") {
 		return nil, core.ErrorInvalidQuery
 	}
-	q := "select * from " + ItemTable + " where " + query + ";"
-	fmt.Println(q)
-	res, err := db.dbmap.Select(Item{}, q)
+	res := make([]interface{}, 0)
+	err := db.db.Table(ItemTable).Where(query).Find(res).Error
 
 	return res, err
 }

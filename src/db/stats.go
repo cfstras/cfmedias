@@ -2,7 +2,6 @@ package db
 
 import (
 	"core"
-	log "logger"
 )
 
 //TODO cache these
@@ -25,23 +24,16 @@ func (d *DB) initStats(c core.Core) {
 		}})
 }
 
-func (d *DB) TitlesTotal() int64 {
-	return d.selectInt(`select count(*) from ` + ItemTable)
+func (d *DB) TitlesTotal() (num int64) {
+	d.db.Table(ItemTable).Count(&num)
+	return
 }
 
-func (d *DB) FoldersTotal() int64 {
-	return d.selectInt(`select count(*) from ` + FolderTable)
+func (d *DB) FoldersTotal() (num int64) {
+	d.db.Table(FolderTable).Count(&num)
+	return
 }
 
 func (d *DB) AvgFilesPerFolder() float32 {
 	return float32(d.TitlesTotal()) / float32(d.FoldersTotal())
-}
-
-func (d *DB) selectInt(q string) int64 {
-	if sum, err := d.dbmap.SelectInt(q); err != nil {
-		log.Log.Println("query error:", err)
-		return 0
-	} else {
-		return sum
-	}
 }

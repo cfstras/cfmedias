@@ -74,12 +74,9 @@ func (db *DB) TrackPlayed(ctx core.CommandContext) core.Result {
 		track.ScrobbleCount++
 	}
 
-	rows, err := db.dbmap.Update(track)
+	err = db.db.Save(track).Error
 	if err != nil {
 		return core.Result{Status: core.StatusError, Error: err}
-	}
-	if rows == 0 {
-		return core.Result{Status: core.StatusItemNotFound}
 	}
 
 	return core.Result{Status: core.StatusOK, Result: tracks}

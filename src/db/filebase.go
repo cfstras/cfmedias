@@ -70,7 +70,7 @@ func (d *DB) Update() {
 	go func() {
 		err := filepath.Walk(searchPath, up.step)
 		if err != nil {
-			log.Log.Println("Updater error:", err)
+			log.Log.Println("Updater error:", err.Error())
 		}
 		close(up.allFiles)
 	}()
@@ -99,7 +99,6 @@ func (d *DB) Update() {
 			up.numImportFiles++
 			//fmt.Println("seen filter gets:", entry)
 			// check if we already did this one
-			itemPath := ItemPathView{}
 			tx := <-up.tx
 			rows, err := d.db.Table(ItemTable).
 				Select(ItemTable + ".item_id, " +
@@ -132,7 +131,7 @@ func (d *DB) Update() {
 				entry.Path, entry.Filename)
 			if err != nil {
 				up.numFailedFiles++
-				fmt.Println("import error: ", err)
+				fmt.Println("import error: ", err.Error())
 			}
 		}
 		up.success <- true
@@ -209,12 +208,12 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	item := &Item{
 		Title:       *title,
 		Artist:      *artist,
-		AlbumArtist: nil,
-		Album:       tag.Album(),
-		Genre:       tag.Genre(),
+		AlbumArtist: NullStr(nil),
+		Album:       NullStr(tag.Album()),
+		Genre:       NullStr(tag.Genre()),
 		TrackNumber: uint32(tag.Track()),
-		Folder:      &Folder{Path: parent},
-		Filename:    &file,
+		Folder:      Folder{Path: parent},
+		Filename:    Str(file),
 	}
 	//TODO get album, check ID etc
 

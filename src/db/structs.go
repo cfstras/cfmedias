@@ -2,9 +2,8 @@ package db
 
 import (
 	"core"
-	"errrs"
+	"database/sql"
 	"fmt"
-	"github.com/coopernurse/gorp"
 	"math"
 	"time"
 )
@@ -17,20 +16,20 @@ const (
 
 // when inserting an item, Folder has to be a pointer with only the Path set.
 type Item struct {
-	Id            uint64  `db:"item_id"`
-	Title         string  `db:"title"`
-	Artist        string  `db:"artist"`
-	AlbumArtist   *string `db:"album_artist"`
-	Album         *string `db:"album"`
-	Genre         *string `db:"genre"` //TODO more refined genres
-	TrackNumber   uint32  `db:"track_number"`
-	Filename      *string `db:"filename"`
-	MusicbrainzId *string `db:"musicbrainz_id"`
+	Id            int64
+	Title         string         `sql:"size:255"`
+	Artist        string         `sql:"size:255"`
+	AlbumArtist   sql.NullString `sql:"size:255"`
+	Album         sql.NullString `sql:"size:255"`
+	Genre         sql.NullString `sql:"size:255"` //TODO more refined genres
+	TrackNumber   uint32
+	Filename      sql.NullString `sql:"size:255"`
+	MusicbrainzId sql.NullString `sql:"size:36"`
 
-	Folder   *Folder `db:"-"`
-	FolderId *uint64 `db:"folder_id"`
+	Folder   Folder
+	FolderId sql.NullInt64
 
-	Added int64 `db:"added"`
+	CreatedAt time.Time
 
 	// Total play score of a track.
 	// Gets incremented by up to 1 each time a user listens to a track,
@@ -40,65 +39,59 @@ type Item struct {
 	//  tl: listened lower threshold
 	//  tu: listened upper threshold
 	//  add(x) = min( 1, max( 0, (x - tl) / (tu - tl) ) )
-	PlayScore float32 `db:"play_score"`
+	PlayScore float32
 
 	// Total times a track was played (including skips)
 	// Track Score := (PlayScore / PlayCount)
-	PlayCount uint32 `db:"play_count"`
+	PlayCount uint32
 
 	// Total times a track was played and scored as positive (x >= tl)
-	ScoredCount uint32 `db:"scored_count"`
+	ScoredCount uint32
 
 	// Number of plays that are registered at the local scrobbler.
 	//
 	// When a track is listened and scored positively, this is incremented
 	// and a scrobble is sent to the service.
-	ScrobbleCount uint32 `db:"scrobbled_count"`
+	ScrobbleCount uint32
 }
 
 type Folder struct {
-	Id   uint64 `db:"folder_id"`
-	Path string `db:"path"`
+	Id   int64  `db:"folder_id"`
+	Path string `db:"path" sql:"size:511"`
 
-	Added         int64  `db:"added"`
-	MusicbrainzId string `db:"musicbrainz_folder_id"`
+	CreatedAt     time.Time
+	MusicbrainzId string `sql:"size:36"`
 }
 
 type User struct {
-	Id uint64 `db:"user_id" json:"-"`
+	Id int64 `json:"-"`
 
 	// Login name for the user. Has to be unique.
-	Name string `db:"name" json:"name"`
+	Name string `json:"name" sql:"size:255"`
 
 	// E-mail address. Has to be unique.
-	EMail string `db:"email" json:"email"`
+	Email string `json:"email"`
 
-	AuthLevel core.AuthLevel `db:"auth_level" json:"auth_level"`
+	AuthLevel core.AuthLevel `json:"auth_level"`
 
 	// salt + pbkdf2-hashed password
-	Password []byte `db:"password" json:"-"`
+	Password []byte `json:"-"`
 
 	// Authentication token, used for sending requests
-	AuthToken string `db:"auth_token" json:"auth_token"`
+	AuthToken string `json:"auth_token"`
 
 	//TODO optionally add a common secret for authenticating messages via HMAC
-}
-
-type ItemPathView struct {
-	Id       uint64
-	Filename string
-	Path     string
 }
 
 func (i *Item) String() string {
 	return fmt.Sprintf("Item[%d]{%s / %s - %s / %d %s, %s]", i.Id, i.Artist,
 		str(i.AlbumArtist), str(i.Album), i.TrackNumber, i.Title, str(i.Genre))
 }
-func str(s *string) string {
-	if s == nil {
+func str(s sql.NullString) string {
+	if !s.Valid {
 		return "<nil>"
 	}
-	return *s
+	return s.String
 }
 
 // Returns a rating of the song and an indication of how accurate the score
@@ -123,42 +116,46 @@ func (i *Item) Skipped() uint32 {
 	return i.ScoredCount - i.PlayCount
 }
 
+/*
 func (i *Item) PreInsert(s gorp.SqlExecutor) error {
-	i.Added = time.Now().Unix()
+	//TODO migrate hooks
+	i.CreatedAt = time.Now()
 
-	if i.Filename == nil {
-		// No filename, no path.
-		i.Folder = nil
-		i.FolderId = nil
-		return nil
-	}
-	if i.Folder == nil {
-		return errrs.New("Item insert with path needs a Folder!")
-	}
-
-	// set the folder foreign key
-	oldFolder := Folder{}
-	if err := s.SelectOne(&oldFolder,
-		`select * from `+FolderTable+` where path = ?`,
-		i.Folder.Path); err != nil {
-
-		return err
-	} else if oldFolder.Id == 0 { // not yet there, insert
-
-		if err := s.Insert(i.Folder); err != nil {
-			return err
+		if !i.Filename.Valid {
+			// No filename, no path.
+			i.Folder = nil
+			i.FolderId = NullI64(nil)
+			return nil
 		}
-	} else { // all is well, copy folder
-		i.Folder = &oldFolder
-	}
-	i.FolderId = &i.Folder.Id
-	return nil
+		if i.Folder == nil {
+			return errrs.New("Item insert with path needs a Folder!")
+		}
+
+		// set the folder foreign key
+		oldFolder := Folder{}
+		if err := s.SelectOne(&oldFolder,
+			`select * from `+FolderTable+` where path = ?`,
+			i.Folder.Path); err != nil {
+
+			return err
+		} else if oldFolder.Id == 0 { // not yet there, insert
+
+			if err := s.Insert(i.Folder); err != nil {
+				return err
+			}
+		} else { // all is well, copy folder
+			i.Folder = &oldFolder
+		}
+		i.FolderId = &i.Folder.Id
+		return nil
+	//TODO gorm should handle this for itself
 }
 
 func (f *Folder) PreInsert(s gorp.SqlExecutor) error {
 	f.Added = time.Now().Unix()
 	return nil
 }
+*/
 
 func limit(val, min, max float32) float32 {
 	return float32(math.Min(float64(min), math.Max(float64(max), float64(val))))
