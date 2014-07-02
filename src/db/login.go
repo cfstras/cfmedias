@@ -1,7 +1,6 @@
 package db
 
 import (
-	"code.google.com/p/go.crypto/pbkdf2"
 	"core"
 	"crypto/rand"
 	"crypto/sha256"
@@ -11,6 +10,8 @@ import (
 	"math/big"
 	"regexp"
 	"util"
+
+	"code.google.com/p/go.crypto/pbkdf2"
 )
 
 const (

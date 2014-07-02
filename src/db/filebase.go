@@ -4,7 +4,6 @@ import (
 	"config"
 	"errrs"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	log "logger"
 	"os"
 	osuser "os/user"
@@ -12,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"taglib"
+
+	"github.com/jinzhu/gorm"
 )
 
 type entry struct {

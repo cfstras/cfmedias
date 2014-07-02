@@ -1,9 +1,10 @@
 package main
 
 import (
-	"code.google.com/p/portaudio-go/portaudio"
 	"math"
 	"time"
+
+	"code.google.com/p/portaudio-go/portaudio"
 )
 
 const sampleRate = 44100

@@ -6,14 +6,15 @@ import (
 	"core"
 	"db"
 	"fmt"
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
 	"mime"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"strings"
 	"util"
+
+	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
 )
 
 var allowedTemplates = []string{".html"}

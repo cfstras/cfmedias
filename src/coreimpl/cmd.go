@@ -4,11 +4,12 @@ import (
 	"core"
 	"encoding/json"
 	"fmt"
-	"github.com/peterh/liner"
 	log "logger"
 	"os"
 	"strings"
 	"util"
+
+	"github.com/peterh/liner"
 )
 
 // inits the cmd subsystem

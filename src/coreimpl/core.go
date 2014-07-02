@@ -5,11 +5,12 @@ import (
 	"config"
 	"core"
 	"db"
-	"github.com/peterh/liner"
 	log "logger"
 	"os"
 	"os/signal"
 	"web"
+
+	"github.com/peterh/liner"
 )
 
 type impl struct {
