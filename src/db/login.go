@@ -7,6 +7,7 @@ import (
 	"crypto/subtle"
 	"errrs"
 	"fmt"
+	log "logger"
 	"math/big"
 	"regexp"
 	"util"
@@ -156,8 +157,9 @@ func (db *DB) Login(name string, password string) (success bool,
 func (db *DB) Authenticate(authtoken string) (core.AuthLevel, *int64, error) {
 	invalidErr := errrs.New("auth token invalid")
 	user := User{}
-	err := db.db.Where("auth_token = ?", authtoken).Find(&user)
+	err := db.db.Find(&user, "auth_token = ?", authtoken).Error
 	if err != nil || user.Id == 0 { // not found
+		log.Log.Println("authToken not found", err)
 		return core.AuthGuest, nil, invalidErr
 	}
 	return user.AuthLevel, &user.Id, nil
