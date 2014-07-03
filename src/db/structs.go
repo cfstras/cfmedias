@@ -20,7 +20,7 @@ type Item struct {
 	Title         string         `sql:"size:255"`
 	Artist        string         `sql:"size:255"`
 	AlbumArtist   sql.NullString `sql:"size:255"`
-	Album         sql.NullString `sql:"size:255"`
+	Album         sql.NullString `sql:"size:255" json:",string"`
 	Genre         sql.NullString `sql:"size:255"` //TODO more refined genres
 	TrackNumber   uint32
 	Filename      sql.NullString `sql:"size:255"`
@@ -56,11 +56,11 @@ type Item struct {
 }
 
 type Folder struct {
-	Id   int64  `db:"folder_id"`
-	Path string `db:"path" sql:"size:511"`
+	Id   int64
+	Path string `sql:"size:511"`
 
 	CreatedAt     time.Time
-	MusicbrainzId string `sql:"size:36"`
+	MusicbrainzId sql.NullString `sql:"size:36"`
 }
 
 type User struct {
@@ -124,7 +124,7 @@ func (i *Item) PreInsert(s gorp.SqlExecutor) error {
 		if !i.Filename.Valid {
 			// No filename, no path.
 			i.Folder = nil
-			i.FolderId = NullI64(nil)
+			i.FolderId = sql.NullI64(nil)
 			return nil
 		}
 		if i.Folder == nil {

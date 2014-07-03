@@ -41,10 +41,13 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
 
-	res := make([]interface{}, 0)
-	err = db.db.Table(ItemTable).Find(res).Error
+	res := make([]Item, 0)
+	err = db.db.Find(&res).Error
+	for i := range res { //TODO do this with join
+		db.db.Find(&res[i].Folder, res[i].FolderId)
+	}
 
-	return core.Result{core.StatusOK, res, err, false}
+	return core.Result{core.StatusOK, ItemToInterfaceSlice(res), err, false}
 }
 
 func (db *DB) listQuery(query string) ([]interface{}, error) {
@@ -52,8 +55,11 @@ func (db *DB) listQuery(query string) ([]interface{}, error) {
 		strings.Contains(strings.ToLower(query), "union") {
 		return nil, core.ErrorInvalidQuery
 	}
-	res := make([]interface{}, 0)
-	err := db.db.Table(ItemTable).Where(query).Find(res).Error
+	res := make([]Item, 0)
+	err := db.db.Where(query).Find(&res).Error
+	for i := range res { //TODO do this with join
+		db.db.Find(&res[i].Folder, res[i].FolderId)
+	}
 
-	return res, err
+	return ItemToInterfaceSlice(res), err
 }

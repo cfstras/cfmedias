@@ -71,11 +71,12 @@ func (d *DB) Update() {
 	go func() {
 		err := filepath.Walk(searchPath, up.step)
 		if err != nil {
-			log.Log.Println("Updater error:", err.Error())
+			log.Log.Println("Updater error:", err)
 		}
 		close(up.allFiles)
 	}()
 
+	// filter out ignored
 	go func(input, output chan entry) {
 		for entry := range input {
 			up.numAllFiles++
@@ -95,6 +96,7 @@ func (d *DB) Update() {
 		close(output)
 	}(up.allFiles, up.importFiles)
 
+	// filter out already inserted files
 	go func(input, output chan entry) {
 		for entry := range input {
 			up.numImportFiles++
@@ -102,11 +104,11 @@ func (d *DB) Update() {
 			// check if we already did this one
 			tx := <-up.tx
 			rows, err := d.db.Table(ItemTable).
-				Select(ItemTable + ".item_id, " +
+				Select(ItemTable + ".id, " +
 				ItemTable + ".filename, " +
-				ItemTable + ".path").
+				FolderTable + ".path").
 				Joins("join " + FolderTable + " on " +
-				FolderTable + ".folder_id = " + ItemTable + ".folder_id").
+				FolderTable + ".id = " + ItemTable + ".folder_id").
 				Where(entry).
 				Rows()
 			if err != nil {
@@ -117,7 +119,7 @@ func (d *DB) Update() {
 			if rows.Next() {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
-				log.Log.Println("skipping", entry)
+				//log.Log.Println("skipping", entry)
 			} else {
 				output <- entry
 			}
@@ -125,6 +127,7 @@ func (d *DB) Update() {
 		close(output)
 	}(up.importFiles, up.newFiles)
 
+	// analyze remaining files
 	go func(input chan entry, success chan bool) {
 		for entry := range input {
 			up.numNewFiles++
@@ -132,7 +135,7 @@ func (d *DB) Update() {
 				entry.Path, entry.Filename)
 			if err != nil {
 				up.numFailedFiles++
-				fmt.Println("import error: ", err.Error())
+				fmt.Println("import error: ", err)
 			}
 		}
 		up.success <- true
@@ -152,7 +155,7 @@ func (d *DB) Update() {
 	}
 	if success {
 		tx := <-up.tx
-		if err := tx.Commit(); err != nil {
+		if err := tx.Commit().Error; err != nil {
 			log.Log.Println("Updater error:", err)
 		}
 	}
@@ -175,11 +178,11 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 		//log.Log.Println("in", file)
 	} else if linked, err := filepath.EvalSymlinks(file); err != nil || file != linked {
 		if err != nil {
-			log.Log.Println("Error walking files:", err.Error())
+			log.Log.Println("Error walking files:", err)
 			return nil
 		}
 		filepath.Walk(linked, up.step)
-	} else {
+	} else if !strings.HasPrefix(info.Name(), ".") {
 		select {
 		case <-up.stopStepping:
 			return errrs.New("aborting")
@@ -206,7 +209,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	if title == nil || artist == nil {
 		return errrs.New("Title and Artist cannot be nil. File " + path)
 	}
-	item := &Item{
+	item := Item{
 		Title:       *title,
 		Artist:      *artist,
 		AlbumArtist: NullStr(nil),
@@ -214,12 +217,17 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		Genre:       NullStr(tag.Genre()),
 		TrackNumber: uint32(tag.Track()),
 		Folder:      Folder{Path: parent},
-		Filename:    Str(file),
+		Filename:    NullStr(&file),
 	}
 	//TODO get album, check ID etc
 
 	tx := <-up.tx
-	err = tx.Save(item).Error
+	err = tx.Save(&item.Folder).Error
+	if err != nil {
+		log.Log.Println("error inserting folder", item.Folder, err)
+		return err
+	}
+	err = tx.Save(&item).Error
 	up.tx <- tx
 	if err != nil {
 		log.Log.Println("error inserting item", item, err)

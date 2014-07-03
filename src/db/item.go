@@ -5,7 +5,7 @@ import (
 	"util"
 )
 
-func (db *DB) GetItem(args core.ArgMap) ([]*Item, error) {
+func (db *DB) GetItem(args core.ArgMap) ([]Item, error) {
 	// check if necessary args are there
 	var err error
 	title, err := util.GetArg(args, "title", true, err)
@@ -31,7 +31,7 @@ func (db *DB) GetItem(args core.ArgMap) ([]*Item, error) {
 		limit["musicbrainz_id"] = musicbrainz_id
 	}*/
 
-	tracks := make([]*Item, 0)
+	tracks := make([]Item, 0)
 	err = db.db.Where(limit).Find(tracks).Error
 	if err != nil {
 		return nil, err
@@ -40,15 +40,15 @@ func (db *DB) GetItem(args core.ArgMap) ([]*Item, error) {
 	return tracks, nil
 }
 
-func InterfaceToItemSlice(slice []interface{}) []*Item {
-	items := make([]*Item, len(slice))
+func InterfaceToItemSlice(slice []interface{}) []Item {
+	items := make([]Item, len(slice))
 	for i, v := range slice {
-		items[i] = v.(*Item)
+		items[i] = v.(Item)
 	}
 	return items
 }
 
-func ItemToInterfaceSlice(slice []*Item) []interface{} {
+func ItemToInterfaceSlice(slice []Item) []interface{} {
 	items := make([]interface{}, len(slice))
 	for i, v := range slice {
 		items[i] = v

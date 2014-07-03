@@ -30,6 +30,7 @@ func (d *DB) Open(c core.Core) error {
 	}
 	d.open = true
 
+	d.db.LogMode(true)
 	if err := d.checkTables(); err != nil {
 		return err
 	}
