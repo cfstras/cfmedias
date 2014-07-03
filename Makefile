@@ -3,6 +3,8 @@
 
 GOPATH := $(CURDIR)
 export GOPATH
+PATH := $(PATH):$(GOPATH)/bin
+export PATH
 
 BINDATA := bin/go-bindata
 
@@ -45,6 +47,7 @@ bindata-debug:
 .PHONY: clean
 clean:
 	rm -rf bin
+	rm -rf src/code.google.com src/github.com
 
 run: build start
 
@@ -57,7 +60,7 @@ deps:
 	code.google.com/p/portaudio-go/portaudio \
 	github.com/peterh/liner \
 	code.google.com/p/go.crypto/pbkdf2 \
-	github.com/jteeuwen/go-bindata/... \
+	github.com/jteeuwen/go-bindata/go-bindata \
 	github.com/go-martini/martini \
 	github.com/martini-contrib/render \
 	github.com/jinzhu/gorm
