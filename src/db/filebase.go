@@ -222,7 +222,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	//TODO get album, check ID etc
 
 	tx := <-up.tx
-	err = tx.Save(&item.Folder).Error
+	err = tx.FirstOrCreate(&item.Folder, item.Folder).Error
 	if err != nil {
 		log.Log.Println("error inserting folder", item.Folder, err)
 		return err

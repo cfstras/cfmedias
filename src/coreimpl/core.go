@@ -89,12 +89,12 @@ func (c *impl) Shutdown() error {
 
 	log.Log.Println("shutting down.")
 
-	// disconnect from db
+	log.Log.Println("Closing database...")
 	if err := c.db.Close(); err != nil {
 		log.Log.Println("Error closing database:", err)
 	}
 
-	// save config
+	log.Log.Println("Saving config...")
 	err := config.Save("config.json")
 	if err != nil {
 		//TODO don't catch if this is an init error
