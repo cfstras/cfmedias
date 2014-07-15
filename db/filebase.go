@@ -103,11 +103,15 @@ func (d *DB) Update() {
 			//fmt.Println("seen filter gets:", entry)
 			// check if we already did this one
 			tx := <-up.tx
+
 			var c int
 			err := d.db.Table(ItemTable).
-				Joins("JOIN " + FolderTable + " ON " +
-				FolderTable + ".id = " + ItemTable + ".folder_id").
-				Where(entry).Count(&c).Error
+				//Joins("JOIN " + FolderTable + " ON " +
+				//FolderTable + ".id = " + ItemTable + ".folder_id").
+				//Where(entry).
+				Where("filename = ? AND folder_id = (SELECT id FROM "+FolderTable+
+				" WHERE path = ?)", entry.Filename, entry.Path).
+				Count(&c).Error
 			if err != nil && !strings.Contains(err.Error(), "no rows in result set") {
 				fmt.Println("sql error:", err)
 				up.success <- false
