@@ -105,14 +105,15 @@ func (d *DB) Update() {
 			tx := <-up.tx
 			var c int
 			err := d.db.Table(ItemTable).
-				Joins("join " + FolderTable + " on " +
+				Joins("JOIN " + FolderTable + " ON " +
 				FolderTable + ".id = " + ItemTable + ".folder_id").
 				Where(entry).Count(&c).Error
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "no rows in result set") {
 				fmt.Println("sql error:", err)
 				up.success <- false
+			} else {
+				up.tx <- tx
 			}
-			up.tx <- tx
 			if c != 0 {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
@@ -230,7 +231,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		log.Log.Println("error inserting item", item, err)
 	} else {
 		up.numImportedFiles++
-		log.Log.Println("inserted", item)
+		//log.Log.Println("inserted", item)
 	}
 	return err
 }
