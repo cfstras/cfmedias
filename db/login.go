@@ -1,18 +1,20 @@
 package db
 
 import (
-	"core"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
-	"errrs"
 	"fmt"
-	log "logger"
+
+	log "github.com/cfstras/cfmedias/logger"
+
 	"math/big"
 	"regexp"
-	"util"
 
 	"code.google.com/p/go.crypto/pbkdf2"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
+	"github.com/cfstras/cfmedias/util"
 )
 
 const (

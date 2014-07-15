@@ -1,14 +1,14 @@
 package coreimpl
 
 import (
-	"core"
 	"encoding/json"
 	"fmt"
-	log "logger"
 	"os"
 	"strings"
-	"util"
 
+	"github.com/cfstras/cfmedias/core"
+	log "github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/cfmedias/util"
 	"github.com/peterh/liner"
 )
 

@@ -1,14 +1,15 @@
 package audioscrobbler
 
 import (
-	"core"
 	"crypto/md5"
-	"db"
-	"errrs"
 	"fmt"
-	"logger"
 	"time"
-	"util"
+
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/errrs"
+	"github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/cfmedias/util"
 )
 
 const (

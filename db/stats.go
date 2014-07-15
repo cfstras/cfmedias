@@ -1,8 +1,6 @@
 package db
 
-import (
-	"core"
-)
+import "github.com/cfstras/cfmedias/core"
 
 //TODO cache these
 

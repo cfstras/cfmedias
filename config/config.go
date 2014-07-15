@@ -2,9 +2,10 @@ package config
 
 import (
 	"encoding/json"
-	"errrs"
 	"log"
 	"os"
+
+	"github.com/cfstras/cfmedias/errrs"
 )
 
 type Configuration struct {

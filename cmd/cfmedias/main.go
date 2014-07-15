@@ -1,9 +1,10 @@
 package main
 
 import (
-	"coreimpl"
 	"log"
 	"os"
+
+	"github.com/cfstras/cfmedias/coreimpl"
 )
 
 func main() {

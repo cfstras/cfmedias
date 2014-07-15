@@ -1,10 +1,11 @@
 package db
 
 import (
-	"config"
-	"core"
 	"math"
-	"util"
+
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/util"
 )
 
 const (

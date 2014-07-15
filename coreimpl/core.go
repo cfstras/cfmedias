@@ -1,15 +1,15 @@
 package coreimpl
 
 import (
-	as "audioscrobbler"
-	"config"
-	"core"
-	"db"
-	log "logger"
 	"os"
 	"os/signal"
-	"web"
 
+	as "github.com/cfstras/cfmedias/audioscrobbler"
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/db"
+	log "github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/cfmedias/web"
 	"github.com/peterh/liner"
 )
 

@@ -1,10 +1,11 @@
 package db
 
 import (
-	"core"
-	"errrs"
 	"strings"
-	"util"
+
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
+	"github.com/cfstras/cfmedias/util"
 )
 
 func (db *DB) initList(c core.Core) {

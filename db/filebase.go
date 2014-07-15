@@ -1,17 +1,17 @@
 package db
 
 import (
-	"config"
-	"errrs"
 	"fmt"
-	log "logger"
 	"os"
 	osuser "os/user"
 	"path"
 	"path/filepath"
 	"strings"
-	"taglib"
 
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/errrs"
+	log "github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/go-taglib"
 	"github.com/jinzhu/gorm"
 )
 
@@ -233,7 +233,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		log.Log.Println("error inserting item", item, err)
 	} else {
 		up.numImportedFiles++
-		//log.Log.Println("inserted", item)
+		log.Log.Println("inserted", item)
 	}
 	return err
 }

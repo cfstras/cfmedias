@@ -1,9 +1,9 @@
 package db
 
 import (
-	"config"
-	"core"
-	"errrs"
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"

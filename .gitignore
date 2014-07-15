@@ -1,9 +1,5 @@
 
-bin/
-pkg/
-src/github.com/
-src/code.google.com/
-
+cfmedias
 config.json
 db.sqlite
 

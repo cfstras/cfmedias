@@ -2,17 +2,17 @@ package web
 
 import (
 	"bytes"
-	"config"
-	"core"
-	"db"
 	"fmt"
 	"mime"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"strings"
-	"util"
 
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/util"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 )

@@ -1,9 +1,10 @@
 package util
 
 import (
-	"core"
-	"errrs"
 	"strconv"
+
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
 )
 
 // This file contains utils for fetching arguments used in the api.

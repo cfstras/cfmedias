@@ -2,13 +2,13 @@
     "folders": [
         {
             "follow_symlinks": true,
-            "path": "/home/claus/vcs/cfmedias"
+            "path": "."
         }
     ],
     "settings": {
         "GoSublime": {
             "env": {
-                "GOPATH": "$HOME/go:$GS_GOPATH:${project}"
+                "GOPATH": "$GS_GOPATH}"
             }
         },
         "rulers": [80]

@@ -1,9 +1,11 @@
 package db
 
 import (
-	"core"
 	"database/sql"
 	"fmt"
+
+	"github.com/cfstras/cfmedias/core"
+
 	"math"
 	"time"
 )
