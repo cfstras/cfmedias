@@ -103,20 +103,17 @@ func (d *DB) Update() {
 			//fmt.Println("seen filter gets:", entry)
 			// check if we already did this one
 			tx := <-up.tx
-			rows, err := d.db.Table(ItemTable).
-				Select(ItemTable + ".id, " +
-				ItemTable + ".filename, " +
-				FolderTable + ".path").
+			var c int
+			err := d.db.Table(ItemTable).
 				Joins("join " + FolderTable + " on " +
 				FolderTable + ".id = " + ItemTable + ".folder_id").
-				Where(entry).
-				Rows()
+				Where(entry).Count(&c).Error
 			if err != nil {
 				fmt.Println("sql error:", err)
 				up.success <- false
 			}
 			up.tx <- tx
-			if rows.Next() {
+			if c != 0 {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
 				//log.Log.Println("skipping", entry)
