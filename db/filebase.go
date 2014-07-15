@@ -1,17 +1,17 @@
 package db
 
 import (
-	"config"
-	"errrs"
 	"fmt"
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/errrs"
+	log "github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/go-taglib"
 	"github.com/coopernurse/gorp"
-	log "logger"
 	"os"
 	osuser "os/user"
 	"path"
 	"path/filepath"
 	"strings"
-	"taglib"
 )
 
 type entry struct {
@@ -119,7 +119,7 @@ func (d *DB) Update() {
 			if itemPath.Id != 0 {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
-				//log.Log.Println("skipping", path)
+				//log.Log.Println("skipping", entry)
 			} else {
 				output <- entry
 			}
@@ -227,7 +227,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		log.Log.Println("error inserting item", item, err)
 	} else {
 		up.numImportedFiles++
-		//log.Log.Println("inserted", item)
+		log.Log.Println("inserted", item)
 	}
 	return err
 }

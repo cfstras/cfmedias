@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"errrs"
+	"github.com/cfstras/cfmedias/errrs"
 	"log"
 	"os"
 )

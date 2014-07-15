@@ -1,8 +1,8 @@
 package db
 
 import (
-	"core"
-	"util"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/util"
 )
 
 func (db *DB) GetItem(args core.ArgMap) ([]*Item, error) {

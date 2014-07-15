@@ -1,7 +1,7 @@
 package core
 
 import (
-	"errrs"
+	"github.com/cfstras/cfmedias/errrs"
 )
 
 type ArgMap map[string][]string

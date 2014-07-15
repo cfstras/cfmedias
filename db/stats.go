@@ -1,8 +1,8 @@
 package db
 
 import (
-	"core"
-	log "logger"
+	"github.com/cfstras/cfmedias/core"
+	log "github.com/cfstras/cfmedias/logger"
 )
 
 //TODO cache these

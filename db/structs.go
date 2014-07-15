@@ -1,9 +1,9 @@
 package db
 
 import (
-	"core"
-	"errrs"
 	"fmt"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
 	"github.com/coopernurse/gorp"
 	"math"
 	"time"

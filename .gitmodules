@@ -1,3 +1,0 @@
-[submodule "src/taglib"]
-	path = src/taglib
-	url = git@github.com:cfstras/go-taglib.git

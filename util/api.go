@@ -1,8 +1,8 @@
 package util
 
 import (
-	"core"
-	"errrs"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
 	"strconv"
 )
 

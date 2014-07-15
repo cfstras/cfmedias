@@ -2,10 +2,11 @@ package web
 
 import (
 	"bytes"
-	"config"
-	"core"
-	"db"
 	"fmt"
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/util"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 	"mime"
@@ -13,7 +14,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"strings"
-	"util"
 )
 
 var allowedTemplates = []string{".html"}

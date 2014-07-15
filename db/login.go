@@ -2,15 +2,15 @@ package db
 
 import (
 	"code.google.com/p/go.crypto/pbkdf2"
-	"core"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
-	"errrs"
 	"fmt"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
+	"github.com/cfstras/cfmedias/util"
 	"math/big"
 	"regexp"
-	"util"
 )
 
 const (

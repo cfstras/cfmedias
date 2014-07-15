@@ -1,7 +1,7 @@
 package main
 
 import (
-	"coreimpl"
+	"github.com/cfstras/cfmedias/coreimpl"
 	"log"
 	"os"
 )

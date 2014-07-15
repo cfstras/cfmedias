@@ -1,14 +1,14 @@
 package db
 
 import (
-	"config"
-	"core"
 	"database/sql"
-	"errrs"
+	"github.com/cfstras/cfmedias/config"
+	"github.com/cfstras/cfmedias/core"
+	"github.com/cfstras/cfmedias/errrs"
+	log "github.com/cfstras/cfmedias/logger"
 	"github.com/coopernurse/gorp"
 	"github.com/go-contrib/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	log "logger"
 )
 
 type DB dbstruct
