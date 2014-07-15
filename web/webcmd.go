@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 	"os"
 	"strings"
 
@@ -65,17 +65,33 @@ func (n *NetCmdLine) Start(coreInstance core.Core, db *db.DB) {
 		r.Post("/:cmd", n.api)
 	}, mapArgs, n.authenticate)
 
-	m.Use(func(c martini.Context, r *http.Request) {
-		c.Map(r.URL.Path[1:])
+	m.Group("/debug/pprof", func(r martini.Router) {
+		r.Any("/", pprof.Index)
+		r.Any("/cmdline", pprof.Cmdline)
+		r.Any("/profile", pprof.Profile)
+		r.Any("/symbol", pprof.Symbol)
+		r.Any("/block", pprof.Handler("block").ServeHTTP)
+		r.Any("/heap", pprof.Handler("heap").ServeHTTP)
+		r.Any("/goroutine", pprof.Handler("goroutine").ServeHTTP)
+		r.Any("/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 	})
-	m.Get("/", index_html)
-	m.Get("/**", setMime, Asset)
+
+	mapAsset := func(c martini.Context, r *http.Request) {
+		c.Map(r.URL.Path[1:])
+	}
+	m.Get("/", mapAsset, index_html)
+	m.Get("/css/**", mapAsset, setMime, Asset)
+	m.Get("/fonts/**", mapAsset, setMime, Asset)
+	m.Get("/js/**", mapAsset, setMime, Asset)
 
 	os.Setenv("PORT", fmt.Sprint(config.Current.WebPort))
 	m.Run()
 }
 
 func setMime(w http.ResponseWriter, path string) {
+	if !strings.Contains(path, ".") {
+		return
+	}
 	w.Header().Set("Content-Type", mime.TypeByExtension(path[strings.LastIndex(path, "."):]))
 }
 
