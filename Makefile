@@ -38,6 +38,8 @@ clean:
 	rm cfmedias
 
 deps:
+	@echo please install portaudio1.9-dev and libtagc0-dev with your package manager
+
 	go get \
 		code.google.com/p/go.tools/cmd/goimports \
 		github.com/go-contrib/uuid \
@@ -46,9 +48,7 @@ deps:
 		github.com/jinzhu/gorm \
 		github.com/peterh/liner \
 		code.google.com/p/go.crypto/pbkdf2 \
-		github.com/jteeuwen/go-bindata/... \
 		github.com/go-martini/martini \
 		github.com/martini-contrib/render \
 		github.com/cfstras/go-taglib
-
-	@echo please install portaudio1.9-dev and libtagc0-dev with your package manager
+	go get github.com/jteeuwen/go-bindata/...
