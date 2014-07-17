@@ -19,17 +19,18 @@ FOLDERS := src/config \
 all: build
 
 build: bindata-final compile
+build-debug: bindata-debug compile
 
 compile:
-	go build github.com/cfstras/cfmedias/cmd/cfmedias
+	go build -v github.com/cfstras/cfmedias/cmd/cfmedias
 
 bindata-final:
 	$(BINDATA) -debug=false -nocompress=false $(BINDATA_FLAGS)
 
-bindata:
+bindata-debug:
 	$(BINDATA) -debug=true $(BINDATA_FLAGS)
 
-run: build start
+run: build-debug start
 
 start:
 	./cfmedias
