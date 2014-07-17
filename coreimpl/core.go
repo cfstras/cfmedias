@@ -9,6 +9,7 @@ import (
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
 	log "github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/cfmedias/sync"
 	"github.com/cfstras/cfmedias/web"
 	"github.com/peterh/liner"
 )
@@ -32,6 +33,7 @@ type impl struct {
 
 	db             *db.DB
 	audioscrobbler *as.AS
+	sync           *sync.Sync
 }
 
 func New() core.Core {
@@ -75,6 +77,10 @@ func (c *impl) Start() error {
 	// start audioscrobbler
 	c.audioscrobbler = new(as.AS)
 	c.audioscrobbler.Start(c, c.db)
+
+	// start syncer
+	c.sync = new(sync.Sync)
+	c.sync.Start(c, c.db)
 
 	// update local files
 	go c.db.Update()

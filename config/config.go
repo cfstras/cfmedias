@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -16,13 +17,15 @@ type Configuration struct {
 
 	ListenedUpperThreshold float32
 	ListenedLowerThreshold float32
+
+	Plugins map[string]interface{}
 }
 
 var Current *Configuration
 var Default *Configuration
 
 // Initializes the config with standard parameters
-func Init() {
+func init() {
 	log.Println("Initializing new configuation.")
 	Default = &Configuration{
 		DbFile:                 "db.sqlite",
@@ -31,8 +34,17 @@ func Init() {
 		CacheWebTemplates:      true,
 		ListenedUpperThreshold: 0.7,
 		ListenedLowerThreshold: 0.3,
+
+		Plugins: map[string]interface{}{},
 	}
 	Current = Default
+}
+
+func RegisterPlugin(pluginName string, defaults interface{}) {
+	Default.Plugins[pluginName] = defaults
+	if _, ok := Current.Plugins[pluginName]; !ok {
+		Current.Plugins[pluginName] = defaults
+	}
 }
 
 func Load(configFile string) error {
@@ -40,19 +52,18 @@ func Load(configFile string) error {
 		return errrs.New("Config already loaded.")
 	}
 
-	file, err := os.Open(configFile)
-	if os.IsNotExist(err) {
-		Init()
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		// save defaults
+		Current = Default
 		return Save(configFile)
 	}
+
+	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
 	var read Configuration
-	err = decoder.Decode(&read)
+	err = json.Unmarshal(b, &read)
 	if err != nil {
 		return err
 	}
@@ -68,18 +79,13 @@ func Save(configFile string) error {
 		return errrs.New("Config has not been initialized, cannot save!")
 	}
 
-	file, err := os.Create(configFile)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
 	str, err := json.MarshalIndent(Current, "", "  ")
 	if err != nil {
 		return err
 	}
+	err = ioutil.WriteFile(configFile, str, 0644)
 
-	if _, err := file.Write(str); err != nil {
+	if err != nil {
 		return err
 	}
 
