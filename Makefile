@@ -4,30 +4,27 @@ BINDATA := $(GOPATH)/bin/go-bindata
 BINDATA_DIRS = web/assets web/assets/css web/assets/js web/assets/fonts
 BINDATA_FLAGS = -o=web/bindata.go -pkg=web -prefix web/assets $(BINDATA_DIRS)
 
-.PHONY: start run deps bindata bindata-final compile release build
+.PHONY: all build build-debug compile bindata-final bindata-debug run start clean fix bindata-dep
 
-FOLDERS := src/config \
-	src/core \
-	src/coreimpl \
-	src/db \
-	src/errrs \
-	src/logger \
-	src/main \
-	src/util \
-	src/web
+FOLDERS := $(shell find * -type d)
 
-all: build
+all: build-debug
 
 build: bindata-final compile
 build-debug: bindata-debug compile
 
 compile:
-	go build -v github.com/cfstras/cfmedias/cmd/cfmedias
+	@echo -------------------------------------------------------------------
+	@echo if you encounter include errors please install portaudio1.9-dev and
+	@echo libtagc0-dev with your package manager
+	@echo -------------------------------------------------------------------
+	go get -d
+	go build -v
 
-bindata-final:
+bindata-final: bindata-dep
 	$(BINDATA) -debug=false -nocompress=false $(BINDATA_FLAGS)
 
-bindata-debug:
+bindata-debug: bindata-dep
 	$(BINDATA) -debug=true $(BINDATA_FLAGS)
 
 run: build-debug start
@@ -38,18 +35,9 @@ start:
 clean:
 	rm cfmedias
 
-deps:
-	@echo please install portaudio1.9-dev and libtagc0-dev with your package manager
+fix:
+	goimports -l -w $(FOLDERS)
+	for f in $(find -type f -name "*.go"); do go fix $i; done
 
-	go get \
-		code.google.com/p/go.tools/cmd/goimports \
-		github.com/go-contrib/uuid \
-		code.google.com/p/portaudio-go/portaudio \
-		github.com/mattn/go-sqlite3 \
-		github.com/jinzhu/gorm \
-		github.com/peterh/liner \
-		code.google.com/p/go.crypto/pbkdf2 \
-		github.com/go-martini/martini \
-		github.com/martini-contrib/render \
-		github.com/cfstras/go-taglib
+bindata-dep:
 	go get github.com/jteeuwen/go-bindata/...
