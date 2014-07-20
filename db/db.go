@@ -13,6 +13,7 @@ type DB dbstruct
 
 type dbstruct struct {
 	db   gorm.DB
+	c    core.Core
 	open bool
 }
 
@@ -20,6 +21,7 @@ func (d *DB) Open(c core.Core) error {
 	if d.open {
 		return errrs.New("DB is already opened!")
 	}
+	d.c = c
 
 	var err error
 	file := config.Current.DbFile

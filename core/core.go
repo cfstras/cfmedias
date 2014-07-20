@@ -48,6 +48,14 @@ const (
 	StatusQueryNotUnique        = "QueryNotUnique"
 )
 
+type JobSignal int
+
+const (
+	SignalNone JobSignal = iota
+	SignalTerminate
+	SignalKill
+)
+
 type Result struct {
 	Status Status      `json:"status"`
 	Result interface{} `json:"result,omitempty"`
@@ -86,4 +94,18 @@ type Core interface {
 	CmdLine()
 	Cmd(ctx CommandContext) Result
 	IsCmdAllowed(level AuthLevel, cmd string) (bool, error)
+
+	// Long-running jobs can use this method to register a shutdown handler.
+	// Returned is a channel which should be listened on.
+	//
+	// When the core is shut down, it will first send a SignalTerminate to each
+	// registered job, then wait a few seconds, and then send a SignalKill.
+	// After the SignalKill is received, the goroutine will be killed.
+	// If necessary, the killing can be delayed by not listening on the channel
+	// anymore after receiving the SignalTerminate. Don't wait for too long,
+	// though.
+	RegisterJob() <-chan JobSignal
+
+	// Use this to unregister your job once it's finished.
+	UnregisterJob(job <-chan JobSignal)
 }

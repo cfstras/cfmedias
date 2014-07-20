@@ -3,13 +3,15 @@ package coreimpl
 import (
 	"os"
 	"os/signal"
+	"sync"
+	"time"
 
 	as "github.com/cfstras/cfmedias/audioscrobbler"
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
 	log "github.com/cfstras/cfmedias/logger"
-	"github.com/cfstras/cfmedias/sync"
+	filesync "github.com/cfstras/cfmedias/sync"
 	"github.com/cfstras/cfmedias/web"
 	"github.com/peterh/liner"
 )
@@ -31,9 +33,12 @@ type impl struct {
 	replActive bool
 	reading    bool
 
+	jobMutex sync.Mutex
+	jobs     []chan core.JobSignal
+
 	db             *db.DB
 	audioscrobbler *as.AS
-	sync           *sync.Sync
+	sync           *filesync.Sync
 }
 
 func New() core.Core {
@@ -79,7 +84,7 @@ func (c *impl) Start() error {
 	c.audioscrobbler.Start(c, c.db)
 
 	// start syncer
-	c.sync = new(sync.Sync)
+	c.sync = new(filesync.Sync)
 	c.sync.Start(c, c.db)
 
 	// update local files
@@ -93,7 +98,24 @@ func (c *impl) Shutdown() error {
 		return nil
 	}
 
-	log.Log.Println("shutting down.")
+	log.Log.Println("Shutting down.")
+
+	log.Log.Println("Stopping jobs...")
+	wait := false
+	for _, j := range c.jobs {
+		wait = true
+		go func(j chan<- core.JobSignal) {
+			j <- core.SignalTerminate
+		}(j)
+	}
+	if wait {
+		time.Sleep(time.Second * 3)
+	}
+	log.Log.Println("Killing jobs...")
+	for _, j := range c.jobs {
+		j <- core.SignalKill
+		close(j)
+	}
 
 	log.Log.Println("Closing database...")
 	if err := c.db.Close(); err != nil {
@@ -113,4 +135,30 @@ func (c *impl) Shutdown() error {
 	}
 
 	return err
+}
+
+func (c *impl) RegisterJob() <-chan core.JobSignal {
+	c.jobMutex.Lock()
+	defer c.jobMutex.Unlock()
+	ch := make(chan core.JobSignal)
+	c.jobs = append(c.jobs, ch)
+	return ch
+}
+
+func (c *impl) UnregisterJob(job <-chan core.JobSignal) {
+	go func() {
+		// drain the channel
+		for _ = range job {
+		}
+	}()
+	c.jobMutex.Lock()
+	defer c.jobMutex.Unlock()
+	for i, v := range c.jobs {
+		if v == job {
+			// delete from slice
+			c.jobs[i], c.jobs[len(c.jobs)-1], c.jobs = c.jobs[len(c.jobs)-1],
+				nil, c.jobs[:len(c.jobs)-1]
+			break
+		}
+	}
 }

@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/cfstras/cfmedias/config"
-	"github.com/cfstras/cfmedias/errrs"
+	"github.com/cfstras/cfmedias/core"
+	errors "github.com/cfstras/cfmedias/errrs"
 	log "github.com/cfstras/cfmedias/logger"
 	"github.com/cfstras/go-taglib"
 	"github.com/jinzhu/gorm"
@@ -20,9 +21,10 @@ type entry struct {
 	Filename string
 }
 
-const bufferSize = 128
+const bufferSize = 16
 
 type updater struct {
+	job          <-chan core.JobSignal
 	tx           chan *gorm.DB
 	allFiles     chan entry // all files seen
 	newFiles     chan entry // files not yet in db
@@ -44,6 +46,8 @@ var IgnoredTypes = []string{
 	"itc2", "html", "xml", "ipa", "asd", "plist", "itdb", "itl", "tmp", "ini",
 	"sh", "sha1", "blb"}
 
+var ErrorTerminate error = errors.New("Terminating")
+
 func (d *DB) Update() {
 	// keep file base up to date
 	searchPath := config.Current.MediaPath
@@ -60,7 +64,9 @@ func (d *DB) Update() {
 		return
 	}
 	tx := d.db.Begin()
-	up := &updater{tx: make(chan *gorm.DB, 1),
+	up := &updater{
+		job:          d.c.RegisterJob(),
+		tx:           make(chan *gorm.DB, 1),
 		allFiles:     make(chan entry, bufferSize),
 		newFiles:     make(chan entry, bufferSize),
 		importFiles:  make(chan entry, bufferSize),
@@ -70,7 +76,7 @@ func (d *DB) Update() {
 
 	go func() {
 		err := filepath.Walk(searchPath, up.step)
-		if err != nil {
+		if err != nil && err != ErrorTerminate {
 			log.Log.Println("Updater error:", err)
 		}
 		close(up.allFiles)
@@ -105,15 +111,20 @@ func (d *DB) Update() {
 			tx := <-up.tx
 
 			var c int
-			err := d.db.Table(ItemTable).
+			err := tx.Table(ItemTable).
 				//Joins("JOIN " + FolderTable + " ON " +
 				//FolderTable + ".id = " + ItemTable + ".folder_id").
 				//Where(entry).
 				Where("filename = ? AND folder_id = (SELECT id FROM "+FolderTable+
 				" WHERE path = ?)", entry.Filename, entry.Path).
 				Count(&c).Error
-			if err != nil && !strings.Contains(err.Error(), "no rows in result set") {
-				fmt.Println("sql error:", err)
+			if err != nil {
+				if strings.Contains(err.Error(), "no rows in result set") {
+					log.Log.Println("this should not happen.")
+					up.tx <- tx
+					continue
+				}
+				log.Log.Println("sql error:", err)
 				up.success <- false
 			} else {
 				up.tx <- tx
@@ -121,8 +132,9 @@ func (d *DB) Update() {
 			if c != 0 {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
-				//log.Log.Println("skipping", entry)
+				log.Log.Println("skipping", entry)
 			} else {
+				log.Log.Println("not skipping", entry)
 				output <- entry
 			}
 		}
@@ -149,14 +161,16 @@ func (d *DB) Update() {
 		if !v {
 			up.stopStepping <- true
 			success = false
-			break
-			if err := tx.Rollback(); err != nil {
+			log.Log.Println("Rolling back...")
+			if err := tx.Rollback().Error; err != nil {
 				log.Log.Println("rollback error:", err)
 			}
+			break
 		}
 	}
 	if success {
 		tx := <-up.tx
+		log.Log.Println("Committing imported files...")
 		if err := tx.Commit().Error; err != nil {
 			log.Log.Println("Updater error:", err)
 		}
@@ -168,6 +182,8 @@ func (d *DB) Update() {
 		"\nImported Files:   ", up.numImportedFiles,
 		"\nInvalid/Non-media:", up.numInvalidFiles,
 		"\nFailed Files:     ", up.numFailedFiles)
+
+	d.c.UnregisterJob(up.job)
 }
 
 func (up *updater) step(file string, info os.FileInfo, err error) error {
@@ -176,6 +192,15 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 		info.Name() == ".." {
 		return nil
 	}
+	select {
+	case sig, ok := <-up.job:
+		if !ok || sig >= core.SignalTerminate {
+			log.Log.Println("Terminate got, processing remaining files")
+			return ErrorTerminate
+		}
+	default:
+	}
+
 	if info.IsDir() {
 		//log.Log.Println("in", file)
 	} else if linked, err := filepath.EvalSymlinks(file); err != nil || file != linked {
@@ -183,11 +208,14 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 			log.Log.Println("Error walking files:", err)
 			return nil
 		}
-		filepath.Walk(linked, up.step)
+		err = filepath.Walk(linked, up.step)
+		if err != nil {
+			return err
+		}
 	} else if !strings.HasPrefix(info.Name(), ".") {
 		select {
 		case <-up.stopStepping:
-			return errrs.New("aborting")
+			return errors.New("aborting")
 		case up.allFiles <- entry{path.Dir(file), info.Name()}:
 		}
 	}
@@ -209,7 +237,7 @@ func (up *updater) analyze(path string, parent string, file string) error {
 	title := tag.Title()
 	artist := tag.Artist()
 	if title == nil || artist == nil {
-		return errrs.New("Title and Artist cannot be nil. File " + path)
+		return errors.New("Title and Artist cannot be nil. File " + path)
 	}
 	item := Item{
 		Title:       *title,
