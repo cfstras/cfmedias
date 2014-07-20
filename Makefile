@@ -35,9 +35,15 @@ start:
 clean:
 	rm cfmedias
 
-fix:
-	goimports -l -w $(FOLDERS)
-	for f in $(find -type f -name "*.go"); do go fix $i; done
+fix: $(GOPATH)/bin/goimports
+	$(GOPATH)/bin/goimports -l -w $(FOLDERS)
+	for f in $$(find . -type f -name "*.go"); do \
+		go fix "$$f"; \
+		go tool vet -composites=false "$$f"; \
+	done
+
+$(GOPATH)/bin/goimports:
+	go get code.google.com/p/go.tools/cmd/goimports
 
 bindata-dep:
 	go get github.com/jteeuwen/go-bindata/...
