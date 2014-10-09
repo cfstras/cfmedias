@@ -1,8 +1,10 @@
 #TODO add .exe on windows boxen
 
-BINDATA := $(GOPATH)/bin/go-bindata
+BINDATA := go-bindata
 BINDATA_DIRS = web/assets web/assets/css web/assets/js web/assets/fonts
 BINDATA_FLAGS = -o=web/bindata.go -pkg=web -prefix web/assets $(BINDATA_DIRS)
+
+PATH := $(PATH):$(GOPATH)/bin
 
 .PHONY: all build build-debug compile bindata-final bindata-debug run start clean fix bindata-dep
 
@@ -21,10 +23,10 @@ compile:
 	go get -d
 	go build -v
 
-bindata-final: bindata-dep
+bindata-final: bindata
 	$(BINDATA) -debug=false -nocompress=false $(BINDATA_FLAGS)
 
-bindata-debug: bindata-dep
+bindata-debug: bindata
 	$(BINDATA) -debug=true $(BINDATA_FLAGS)
 
 run: build-debug start
@@ -35,15 +37,15 @@ start:
 clean:
 	rm cfmedias
 
-fix: $(GOPATH)/bin/goimports
-	$(GOPATH)/bin/goimports -l -w $(FOLDERS)
+fix: goimports
+	goimports -l -w $(FOLDERS)
 	for f in $$(find . -type f -name "*.go"); do \
 		go fix "$$f"; \
 		go tool vet -composites=false "$$f"; \
 	done
 
-$(GOPATH)/bin/goimports:
-	go get code.google.com/p/go.tools/cmd/goimports
+goimports:
+	go get -v code.google.com/p/go.tools/cmd/goimports
 
-bindata-dep:
-	go get github.com/jteeuwen/go-bindata/...
+bindata:
+	go get -v github.com/jteeuwen/go-bindata/...
