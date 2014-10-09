@@ -1,4 +1,4 @@
-cfmedias
+cfmedias [![Build Status](https://travis-ci.org/cfstras/cfmedias.svg?branch=master)](https://travis-ci.org/cfstras/cfmedias)
 ========
 Making it easy to organize your media.
 
