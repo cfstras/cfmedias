@@ -4,8 +4,6 @@ BINDATA := go-bindata
 BINDATA_DIRS = web/assets web/assets/css web/assets/js web/assets/fonts
 BINDATA_FLAGS = -o=web/bindata.go -pkg=web -prefix web/assets $(BINDATA_DIRS)
 
-PATH := $(PATH):$(GOPATH)/bin
-
 .PHONY: all build build-debug compile bindata-final bindata-debug run start clean fix bindata-dep
 
 FOLDERS := $(shell find * -type d)
