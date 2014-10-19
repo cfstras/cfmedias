@@ -44,7 +44,7 @@ type updater struct {
 var IgnoredTypes = []string{
 	"jpg", "jpeg", "png", "gif", "nfo", "m3u", "log", "sfv", "txt", "cue",
 	"itc2", "html", "xml", "ipa", "asd", "plist", "itdb", "itl", "tmp", "ini",
-	"sh", "sha1", "blb"}
+	"sh", "sha1", "blb", "m3u8", "aax"}
 
 var ErrorTerminate error = errors.New("Terminating")
 
@@ -63,6 +63,7 @@ func (d *DB) Update() {
 		log.Log.Println("Error: Music path", searchPath, "does not exist!")
 		return
 	}
+	d.db.LogMode(false)
 	tx := d.db.Begin()
 	up := &updater{
 		job:          d.c.RegisterJob(),
@@ -132,9 +133,9 @@ func (d *DB) Update() {
 			if c != 0 {
 				// this one is already in the db
 				//TODO check if the tags have changed anyway
-				log.Log.Println("skipping", entry)
+				//log.Log.Println("skipping", entry)
 			} else {
-				log.Log.Println("not skipping", entry)
+				//log.Log.Println("not skipping", entry)
 				output <- entry
 			}
 		}
@@ -175,6 +176,7 @@ func (d *DB) Update() {
 			log.Log.Println("Updater error:", err)
 		}
 	}
+	d.db.LogMode(false)
 	log.Log.Println("Filebase updated:",
 		"\nTotal Files:      ", up.numAllFiles,
 		"\nNon-ignored Files:", up.numImportFiles,

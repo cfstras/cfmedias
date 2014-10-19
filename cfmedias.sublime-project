@@ -6,11 +6,6 @@
         }
     ],
     "settings": {
-        "GoSublime": {
-            "env": {
-                "GOPATH": "$GS_GOPATH}"
-            }
-        },
         "rulers": [80]
     },
     "build_systems": [
