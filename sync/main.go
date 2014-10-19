@@ -4,6 +4,13 @@ import (
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/errrs"
+	"github.com/cfstras/cfmedias/logger"
+	"github.com/cfstras/cfmedias/util"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 )
 
 type Sync struct {
@@ -60,4 +67,67 @@ func init() {
 func (s *Sync) Start(c core.Core, db *db.DB) {
 	s.core = c
 	s.db = db
+
+	c.RegisterCommand(core.Command{[]string{"sync", "s"},
+		"Syncs media with a device or folder. By default, lossles files are converted to MP3 V0.",
+		map[string]string{
+			"path":    "Target path",
+			"convert": "boolean, default is false"},
+		core.AuthAdmin,
+		func(ctx core.CommandContext) core.Result {
+			args := ctx.Args
+			var err error
+			pathS, err := util.GetArg(args, "path", true, err)
+			convertS, err := util.GetArg(args, "convert", false, err)
+			doConvert, err := util.CastBool(convertS, err)
+			if err != nil {
+				return core.ResultByError(err)
+			}
+			convert := true
+			if doConvert != nil {
+				convert = *doConvert
+			}
+			return core.ResultByError(s.Sync(*pathS, convert))
+		}})
+}
+
+type file struct {
+	// relative to targetPath
+	path string
+	info os.FileInfo
+}
+
+func (s *Sync) Sync(targetPath string, convert bool) error {
+	logger.Log.Println("getting data...")
+	tracks, err := s.db.ListAll()
+	if err != nil {
+		return err
+	}
+	logger.Log.Println(len(tracks), "tracks found.")
+	logger.Log.Println("indexing target...")
+
+	cleanPath := path.Clean(targetPath)
+	if cleanPath != "" {
+		cleanPath += "/"
+	}
+	var targetFiles []file
+	filepath.Walk(targetPath, func(filepath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		filepath = path.Clean(filepath)
+		if !strings.HasPrefix(filepath, cleanPath) {
+			return errrs.New("file " + filepath + " is not within " + cleanPath)
+		}
+		filepath = strings.TrimPrefix(filepath, cleanPath)
+		targetFiles = append(targetFiles, file{filepath, info})
+		return nil
+	})
+	logger.Log.Println(len(targetFiles), "files in target")
+	logger.Log.Println(targetFiles)
+
+	return core.ErrorNotImplemented
 }
