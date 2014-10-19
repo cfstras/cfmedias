@@ -32,7 +32,7 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
 	if query != nil {
-		res, err := db.listQuery(*query)
+		res, err := db.ListQuery(*query)
 		if err != nil {
 			return core.ResultByError(errrs.New(err.Error()))
 		}
@@ -42,22 +42,30 @@ func (db *DB) list(ctx core.CommandContext) core.Result {
 		return core.ResultByError(core.ErrorNotImplemented)
 	}
 
-	res := make([]Item, 0)
-	err = db.db.Find(&res).Error
-	for i := range res { //TODO do this with join
-		db.db.Find(&res[i].Folder, res[i].FolderId)
+	res, err := db.ListAll()
+	if err != nil {
+		return core.ResultByError(errrs.New(err.Error()))
 	}
-
-	return core.Result{core.StatusOK, ItemToInterfaceSlice(res), err, false}
+	return core.Result{core.StatusOK, res, err, false}
 }
 
-func (db *DB) listQuery(query string) ([]interface{}, error) {
+func (db *DB) ListQuery(query string) ([]interface{}, error) {
 	if strings.ContainsAny(query, `";`) ||
 		strings.Contains(strings.ToLower(query), "union") {
 		return nil, core.ErrorInvalidQuery
 	}
 	res := make([]Item, 0)
 	err := db.db.Where(query).Find(&res).Error
+	for i := range res { //TODO do this with join
+		db.db.Find(&res[i].Folder, res[i].FolderId)
+	}
+
+	return ItemToInterfaceSlice(res), err
+}
+
+func (db *DB) ListAll() ([]interface{}, error) {
+	res := make([]Item, 0)
+	err := db.db.Find(&res).Error
 	for i := range res { //TODO do this with join
 		db.db.Find(&res[i].Folder, res[i].FolderId)
 	}
