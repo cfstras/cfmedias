@@ -41,10 +41,7 @@ type updater struct {
 	numImportedFiles int
 }
 
-var IgnoredTypes = []string{
-	"jpg", "jpeg", "png", "gif", "nfo", "m3u", "log", "sfv", "txt", "cue",
-	"itc2", "html", "xml", "ipa", "asd", "plist", "itdb", "itl", "tmp", "ini",
-	"sh", "sha1", "blb", "m3u8", "aax"}
+var Types = []string{"mp3", "wav", "flac", "m4a", "aac"}
 
 var ErrorTerminate error = errors.New("Terminating")
 
@@ -87,12 +84,11 @@ func (d *DB) Update() {
 	go func(input, output chan entry) {
 		for entry := range input {
 			up.numAllFiles++
-			//fmt.Println("suffix filter gets:", entry)
-			do := true
-			for _, v := range IgnoredTypes {
+			//TODO do something with the cover jpgs
+			do := false
+			for _, v := range Types {
 				if strings.HasSuffix(entry.Filename, v) {
-					//TODO do something with the cover jpgs
-					do = false
+					do = true
 					break
 				}
 			}
@@ -193,6 +189,9 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 		info.Name() == "." ||
 		info.Name() == ".." {
 		return nil
+	}
+	if info.IsDir() && info.Name() == ".git" {
+		return filepath.SkipDir
 	}
 	select {
 	case sig, ok := <-up.job:
