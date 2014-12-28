@@ -4,19 +4,11 @@ import (
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
-	"github.com/cfstras/cfmedias/errrs"
-	"github.com/cfstras/cfmedias/ipod/glib"
+	"github.com/cfstras/cfmedias/ipod/gpod"
 	"github.com/cfstras/cfmedias/logger"
 	"github.com/cfstras/cfmedias/sync"
 	"github.com/cfstras/cfmedias/util"
 )
-
-/*
-#cgo pkg-config: libgpod-1.0
-#include "gpod/itdb.h"
-#include "stdlib.h"
-*/
-import "C"
 
 type IPod struct {
 	core core.Core
@@ -37,6 +29,8 @@ var defaultConfig Config = Config{
 		},
 	},
 }
+
+const Seperator = "\x00"
 
 func init() {
 	config.RegisterPlugin("ipod", defaultConfig)
@@ -69,21 +63,52 @@ func (p *IPod) Sync(mountpoint string) error {
 	logger.Log.Println(len(tracks), "tracks found.")
 	logger.Log.Println("indexing target...")
 
-	var gerr *C.GError
-	mntpoint := glib.CStr(mountpoint)
-	itdb := C.itdb_parse((*C.gchar)(mntpoint), &gerr)
-	glib.Free(mntpoint)
-	if itdb == nil {
-		str := C.GoString((*C.char)(gerr.message))
-		return errrs.New(str)
+	ipodDb, err := gpod.New(mountpoint)
+	if err != nil {
+		return err
 	}
-	ptr := itdb.tracks
-	for ptr != nil {
-		track := (*C.Itdb_Track)(ptr.data)
-		title := C.GoString((*C.char)(track.title))
-		logger.Log.Println(title)
-		ptr = ptr.next
-	}
+	ipodTracks := ipodDb.Tracks()
+	logger.Log.Println(len(ipodTracks), "tracks on iPod.")
 
+	idxFuncGpod := func(t gpod.Track) string {
+		return t.Title() + Seperator + t.Album() + Seperator + t.Artist()
+	}
+	idxFunc := func(t db.Item) string {
+		str := t.Title + Seperator
+		if t.Album.Valid {
+			str += t.Album.String
+		}
+		return str + Seperator + t.Artist
+	}
+	idx := make(map[string]gpod.Track)
+	for _, t := range ipodTracks {
+		idx[idxFuncGpod(t)] = t
+	}
+	var tracksMissing []db.Item
+	// cfmedias db id -> gpod track
+	tracksFound := make(map[int64]gpod.Track)
+	var tracksUnmatched []gpod.Track
+	matched := make(map[string]bool)
+	for _, t := range tracks {
+		match, ok := idx[idxFunc(t)]
+		if !ok {
+			tracksMissing = append(tracksMissing, t)
+			continue
+		}
+		matched[idxFunc(t)] = true
+		tracksFound[t.Id] = match
+	}
+	for _, t := range ipodTracks {
+		if !matched[idxFuncGpod(t)] {
+			tracksUnmatched = append(tracksUnmatched, t)
+		}
+	}
+	logger.Log.Println(len(tracksFound), "tracks found,",
+		len(tracksUnmatched), "unknown tracks on iPod,",
+		len(tracksMissing), "tracks to copy")
+	//TODO update tags
+	//TODO delete unmatched
+	//TODO add missing
+	//TODO save
 	return core.ErrorNotImplemented
 }
