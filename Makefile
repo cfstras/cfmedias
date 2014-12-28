@@ -15,8 +15,8 @@ build-debug: bindata-debug compile
 
 compile:
 	@echo -------------------------------------------------------------------
-	@echo if you encounter include errors please install portaudio1.9-dev and
-	@echo libtagc0-dev with your package manager
+	@echo if you encounter include errors please install portaudio1.9-dev,
+	@echo libtagc0-dev and libgpod-dev with your package manager
 	@echo -------------------------------------------------------------------
 	go get -d
 	go build -v

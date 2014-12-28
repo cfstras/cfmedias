@@ -10,6 +10,7 @@ import (
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/ipod"
 	log "github.com/cfstras/cfmedias/logger"
 	filesync "github.com/cfstras/cfmedias/sync"
 	"github.com/cfstras/cfmedias/web"
@@ -39,6 +40,7 @@ type impl struct {
 	db             *db.DB
 	audioscrobbler *as.AS
 	sync           *filesync.Sync
+	ipod           *ipod.IPod
 }
 
 func New() core.Core {
@@ -86,6 +88,9 @@ func (c *impl) Start() error {
 	// start syncer
 	c.sync = new(filesync.Sync)
 	c.sync.Start(c, c.db)
+
+	c.ipod = new(ipod.IPod)
+	c.ipod.Start(c, c.db, c.sync)
 
 	// update local files
 	go c.db.Update()

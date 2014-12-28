@@ -1,16 +1,17 @@
 package sync
 
 import (
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
 	"github.com/cfstras/cfmedias/errrs"
 	"github.com/cfstras/cfmedias/logger"
 	"github.com/cfstras/cfmedias/util"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
 )
 
 type Sync struct {
@@ -72,13 +73,13 @@ func (s *Sync) Start(c core.Core, db *db.DB) {
 		"Syncs media with a device or folder. By default, lossles files are converted to MP3 V0.",
 		map[string]string{
 			"path":    "Target path",
-			"convert": "boolean, default is false"},
+			"convert": "boolean, default is true"},
 		core.AuthAdmin,
 		func(ctx core.CommandContext) core.Result {
 			args := ctx.Args
 			var err error
 			pathS, err := util.GetArg(args, "path", true, err)
-			convertS, err := util.GetArg(args, "convert", false, err)
+			convertS, err := util.GetArg(args, "convert", true, err)
 			doConvert, err := util.CastBool(convertS, err)
 			if err != nil {
 				return core.ResultByError(err)
@@ -127,7 +128,6 @@ func (s *Sync) Sync(targetPath string, convert bool) error {
 		return nil
 	})
 	logger.Log.Println(len(targetFiles), "files in target")
-	logger.Log.Println(targetFiles)
 
 	return core.ErrorNotImplemented
 }
