@@ -80,7 +80,7 @@ func ResultByError(err error) Result {
 	if err == nil {
 		return ResultOK
 	} else {
-		return Result{Status: StatusError, Error: err}
+		return Result{Status: StatusError, Error: errrs.New(err.Error())}
 	}
 }
 
