@@ -67,3 +67,10 @@ func StrPtr(s *string) string {
 	}
 	return *s
 }
+
+func StrStr(v sql.NullString) string {
+	if v.Valid {
+		return v.String
+	}
+	return ""
+}

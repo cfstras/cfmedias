@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 
 	"github.com/cfstras/cfmedias/core"
 
@@ -86,7 +87,7 @@ type User struct {
 }
 
 func (i *Item) String() string {
-	return fmt.Sprintf("Item[%d]{%s / %s - %s / %d %s, %s]", i.Id, i.Artist,
+	return fmt.Sprintf("Item[%d]{%s / %s - %s / %d %s, %s}", i.Id, i.Artist,
 		str(i.AlbumArtist), str(i.Album), i.TrackNumber, i.Title, str(i.Genre))
 }
 func str(s sql.NullString) string {
@@ -94,6 +95,14 @@ func str(s sql.NullString) string {
 		return "<nil>"
 	}
 	return s.String
+}
+
+func (i *Item) Path() *string {
+	if !i.FolderId.Valid || !i.Filename.Valid {
+		return nil
+	}
+	str := filepath.Join(i.Folder.Path, i.Filename.String)
+	return &str
 }
 
 // Returns a rating of the song and an indication of how accurate the score
