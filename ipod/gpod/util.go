@@ -23,6 +23,9 @@ func str(str *C.gchar) string {
 }
 
 func err(err *C.GError) error {
+	if err == nil {
+		return errors.New("Fatal: gerror is nil pointer")
+	}
 	str := str(err.message)
 	return errors.New(str)
 }
