@@ -1,10 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/cfstras/cfmedias/coreimpl"
+	log "github.com/cfstras/cfmedias/logger"
 )
 
 func main() {
@@ -12,16 +12,16 @@ func main() {
 	//TODO check args
 
 	// start engine
-	log.Println("Starting cfmedias")
+	log.Log.Println("Starting cfmedias")
 
 	inst := coreimpl.New()
 	err := inst.Start()
 
 	if err != nil {
-		log.Println("Caught an error:", err.Error(), "- exiting...")
+		log.Log.Println("Caught an error:", err.Error(), "- exiting...")
 		err = inst.Shutdown()
 		if err != nil {
-			log.Println(err.Error())
+			log.Log.Println(err.Error())
 		}
 		os.Exit(1)
 	}
@@ -31,9 +31,9 @@ func main() {
 	inst.CmdLine()
 
 	// CmdLine is finished, shutdown
-	log.Println("Exiting...")
+	log.Log.Println("Exiting...")
 
 	if err = inst.Shutdown(); err != nil {
-		log.Println(err.Error())
+		log.Log.Println(err.Error())
 	}
 }

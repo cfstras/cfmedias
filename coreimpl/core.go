@@ -92,6 +92,8 @@ func (c *impl) Start() error {
 	c.ipod = new(ipod.IPod)
 	c.ipod.Start(c, c.db, c.sync)
 
+	c.SaveConfig()
+
 	// update local files
 	go c.db.Update()
 
@@ -102,6 +104,7 @@ func (c *impl) Shutdown() error {
 	if !c.shutUp {
 		return nil
 	}
+	var err error
 
 	log.Log.Println("Shutting down.")
 
@@ -123,23 +126,27 @@ func (c *impl) Shutdown() error {
 	}
 
 	log.Log.Println("Closing database...")
-	if err := c.db.Close(); err != nil {
+	if err = c.db.Close(); err != nil {
 		log.Log.Println("Error closing database:", err)
 	}
 
+	c.SaveConfig()
+	c.shutUp = false
+
+	if err = c.exitCmd(); err != nil {
+		log.Log.Println("cmd exit error", err)
+	}
+
+	return err
+}
+
+func (c *impl) SaveConfig() {
 	log.Log.Println("Saving config...")
 	err := config.Save("config.json")
 	if err != nil {
 		//TODO don't catch if this is an init error
 		log.Log.Println("Error while saving config:", err.Error())
 	}
-	c.shutUp = false
-
-	if err := c.exitCmd(); err != nil {
-		log.Log.Println("cmd exit error", err)
-	}
-
-	return err
 }
 
 func (c *impl) RegisterJob() <-chan core.JobSignal {
