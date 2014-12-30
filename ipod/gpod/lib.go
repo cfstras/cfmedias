@@ -9,6 +9,7 @@ const guint32 RatingStep = ITDB_RATING_STEP;
 */
 import "C"
 import (
+	"encoding/json"
 	"errors"
 )
 
@@ -16,14 +17,32 @@ type GLib interface {
 	Tracks() []Track
 }
 
-type Rating uint32
+type RatingT int32
 
 var (
-	Rating1 Rating = Rating(C.RatingStep * 1)
-	Rating2        = Rating(C.RatingStep * 2)
-	Rating3        = Rating(C.RatingStep * 3)
-	Rating4        = Rating(C.RatingStep * 4)
-	Rating5        = Rating(C.RatingStep * 5)
+	Rating1 RatingT = RatingT(C.RatingStep * 1)
+	Rating2         = RatingT(C.RatingStep * 2)
+	Rating3         = RatingT(C.RatingStep * 3)
+	Rating4         = RatingT(C.RatingStep * 4)
+	Rating5         = RatingT(C.RatingStep * 5)
+)
+
+type Field string
+
+var (
+	Title       Field = "title"
+	Album       Field = "album"
+	Artist      Field = "artist"
+	Genre       Field = "genre"
+	Filetype    Field = "filetype"
+	Comment     Field = "comment"
+	Composer    Field = "composer"
+	Description Field = "description"
+	Albumartist Field = "albumartist"
+	Size        Field = "size"
+	Length      Field = "tracklen"
+	Rating      Field = "rating"
+	Playcount   Field = "playcount"
 )
 
 type Track interface {
@@ -36,10 +55,10 @@ type Track interface {
 	Composer() string
 	Description() string
 	Albumartist() string
-	Size() uint32
+	Size() int32
 	Length() int32
-	Rating() Rating
-	Playcount() uint32
+	Rating() RatingT
+	Playcount() int32
 
 	SetTitle(val string)
 	SetAlbum(val string)
@@ -50,10 +69,10 @@ type Track interface {
 	SetComposer(val string)
 	SetDescription(val string)
 	SetAlbumartist(val string)
-	SetSize(val uint32)
+	SetSize(val int32)
 	SetLength(val int32)
-	SetRating(val Rating)
-	SetPlaycount(val uint32)
+	SetRating(val RatingT)
+	SetPlaycount(val int32)
 }
 
 type glib struct {
@@ -63,15 +82,9 @@ type glib struct {
 type track struct {
 	t *C.Itdb_Track
 
-	_Title       string
-	_Album       string
-	_Artist      string
-	_Genre       string
-	_Filetype    string
-	_Comment     string
-	_Composer    string
-	_Description string
-	_Albumartist string
+	// cached strings
+
+	strCache map[Field]string
 }
 
 func New(path string) (GLib, error) {
@@ -93,7 +106,7 @@ func (g *glib) Tracks() []Track {
 	len := C.g_list_length(ptr)
 	arr := make([]Track, 0, len)
 	for ptr != nil {
-		track := &track{t: (*C.Itdb_Track)(ptr.data)}
+		track := &track{(*C.Itdb_Track)(ptr.data), map[Field]string{}}
 		arr = append(arr, track)
 		ptr = ptr.next
 	}
@@ -101,126 +114,145 @@ func (g *glib) Tracks() []Track {
 }
 
 func (t *track) Title() string {
-	if t._Title == "" {
-		t._Title = str(t.t.title)
+	if t.strCache[Title] == "" {
+		t.strCache[Title] = str(t.t.title)
 	}
-	return t._Title
+	return t.strCache[Title]
 }
 func (t *track) Album() string {
-	if t._Album == "" {
-		t._Album = str(t.t.album)
+	if t.strCache[Album] == "" {
+		t.strCache[Album] = str(t.t.album)
 	}
-	return t._Album
+	return t.strCache[Album]
 }
 func (t *track) Artist() string {
-	if t._Artist == "" {
-		t._Artist = str(t.t.artist)
+	if t.strCache[Artist] == "" {
+		t.strCache[Artist] = str(t.t.artist)
 	}
-	return t._Artist
+	return t.strCache[Artist]
 }
 func (t *track) Genre() string {
-	if t._Genre == "" {
-		t._Genre = str(t.t.genre)
+	if t.strCache[Genre] == "" {
+		t.strCache[Genre] = str(t.t.genre)
 	}
-	return t._Genre
+	return t.strCache[Genre]
 }
 func (t *track) Filetype() string {
-	if t._Filetype == "" {
-		t._Filetype = str(t.t.filetype)
+	if t.strCache[Filetype] == "" {
+		t.strCache[Filetype] = str(t.t.filetype)
 	}
-	return t._Filetype
+	return t.strCache[Filetype]
 }
 func (t *track) Comment() string {
-	if t._Comment == "" {
-		t._Comment = str(t.t.comment)
+	if t.strCache[Comment] == "" {
+		t.strCache[Comment] = str(t.t.comment)
 	}
-	return t._Comment
+	return t.strCache[Comment]
 }
 func (t *track) Composer() string {
-	if t._Composer == "" {
-		t._Composer = str(t.t.composer)
+	if t.strCache[Composer] == "" {
+		t.strCache[Composer] = str(t.t.composer)
 	}
-	return t._Composer
+	return t.strCache[Composer]
 }
 func (t *track) Description() string {
-	if t._Description == "" {
-		t._Description = str(t.t.description)
+	if t.strCache[Description] == "" {
+		t.strCache[Description] = str(t.t.description)
 	}
-	return t._Description
+	return t.strCache[Description]
 }
 func (t *track) Albumartist() string {
-	if t._Albumartist == "" {
-		t._Albumartist = str(t.t.albumartist)
+	if t.strCache[Albumartist] == "" {
+		t.strCache[Albumartist] = str(t.t.albumartist)
 	}
-	return t._Albumartist
+	return t.strCache[Albumartist]
 }
-func (t *track) Size() uint32 {
-	return uint32(t.t.size)
+func (t *track) Size() int32 {
+	return int32(t.t.size)
 }
 func (t *track) Length() int32 {
 	return int32(t.t.tracklen)
 }
-func (t *track) Rating() Rating {
-	return Rating(t.t.rating)
+func (t *track) Rating() RatingT {
+	return RatingT(t.t.rating)
 }
-func (t *track) Playcount() uint32 {
-	return uint32(t.t.playcount)
+func (t *track) Playcount() int32 {
+	return int32(t.t.playcount)
 }
 
 func (t *track) SetTitle(val string) {
-	t._Title = val
+	t.strCache[Title] = val
 	free(t.t.title)
 	t.t.title = cstr(val)
 }
 func (t *track) SetAlbum(val string) {
-	t._Album = val
+	t.strCache[Album] = val
 	free(t.t.album)
 	t.t.album = cstr(val)
 }
 func (t *track) SetArtist(val string) {
-	t._Artist = val
+	t.strCache[Artist] = val
 	free(t.t.artist)
 	t.t.artist = cstr(val)
 }
 func (t *track) SetGenre(val string) {
-	t._Genre = val
+	t.strCache[Genre] = val
 	free(t.t.genre)
 	t.t.genre = cstr(val)
 }
 func (t *track) SetFiletype(val string) {
-	t._Filetype = val
+	t.strCache[Filetype] = val
 	free(t.t.filetype)
 	t.t.filetype = cstr(val)
 }
 func (t *track) SetComment(val string) {
-	t._Comment = val
+	t.strCache[Comment] = val
 	free(t.t.comment)
 	t.t.comment = cstr(val)
 }
 func (t *track) SetComposer(val string) {
-	t._Composer = val
+	t.strCache[Composer] = val
 	free(t.t.composer)
 	t.t.composer = cstr(val)
 }
 func (t *track) SetDescription(val string) {
-	t._Description = val
+	t.strCache[Description] = val
 	free(t.t.description)
 	t.t.description = cstr(val)
 }
 func (t *track) SetAlbumartist(val string) {
-	t._Albumartist = val
+	t.strCache[Albumartist] = val
 	free(t.t.albumartist)
 	t.t.albumartist = cstr(val)
 }
-func (t *track) SetSize(val uint32) {
+func (t *track) SetSize(val int32) {
 	t.t.size = C.guint32(val)
 }
 func (t *track) SetLength(val int32) {
 	t.t.tracklen = C.gint32(val)
 }
-func (t *track) SetRating(val Rating) {
+func (t *track) SetRating(val RatingT) {
 	t.t.rating = C.guint32(val)
 }
-func (t *track) SetPlaycount(val uint32) {
+func (t *track) SetPlaycount(val int32) {
 	t.t.playcount = C.guint32(val)
+}
+
+func (t *track) MarshalJSON() ([]byte, error) {
+	m := map[Field]interface{}{
+		Title:       t.Title(),
+		Album:       t.Album(),
+		Artist:      t.Artist(),
+		Genre:       t.Genre(),
+		Filetype:    t.Filetype(),
+		Comment:     t.Comment(),
+		Composer:    t.Composer(),
+		Description: t.Description(),
+		Albumartist: t.Albumartist(),
+		Size:        t.Size(),
+		Length:      t.Length(),
+		Rating:      t.Rating(),
+		Playcount:   t.Playcount(),
+	}
+	return json.Marshal(m)
 }

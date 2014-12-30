@@ -1,6 +1,7 @@
 package ipod
 
 import (
+	"encoding/json"
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
@@ -8,6 +9,7 @@ import (
 	"github.com/cfstras/cfmedias/logger"
 	"github.com/cfstras/cfmedias/sync"
 	"github.com/cfstras/cfmedias/util"
+	"io/ioutil"
 )
 
 type IPod struct {
@@ -107,6 +109,20 @@ func (p *IPod) Sync(mountpoint string) error {
 	logger.Log.Println(len(tracksFound), "tracks found,",
 		len(tracksUnmatched), "unknown tracks on iPod,",
 		len(tracksMissing), "tracks to copy")
+	m := map[string]interface{}{
+		"unmatched": tracksUnmatched,
+		"missing":   tracksMissing,
+	}
+	b, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile("sync-info.json", b, 0644)
+	if err != nil {
+		return err
+	}
+	logger.Log.Println("Wrote sync-info.json.")
+
 	//TODO update tags
 	//TODO delete unmatched
 	//TODO add missing
