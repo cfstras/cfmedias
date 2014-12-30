@@ -29,6 +29,10 @@ bindata-debug: bindata
 
 run: build-debug start
 
+test:
+	go get -d ./...
+	go test ./...
+
 start:
 	./cfmedias
 

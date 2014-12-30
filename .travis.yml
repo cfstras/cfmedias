@@ -13,6 +13,7 @@ install:
 
 script:
  - make build
+ - make test
  - echo help | ./cfmedias
  - echo list | ./cfmedias
  - echo quit | ./cfmedias
