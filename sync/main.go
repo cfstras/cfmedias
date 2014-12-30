@@ -15,12 +15,14 @@ import (
 )
 
 type Sync struct {
-	core core.Core
-	db   *db.DB
+	core   core.Core
+	db     *db.DB
+	config *Config
 }
 
 type Config struct {
-	ConvertRules map[string]Format
+	ConvertRules map[string]string
+	Formats      map[string]Format
 }
 
 type Format struct {
@@ -46,28 +48,38 @@ var (
 
 	FormatAAC_320K = Format{"aac_320k", "m4a", "aac", 320, true}
 
-	Formats []Format = []Format{FormatFLAC, FormatALAC,
+	FormatList = []Format{FormatFLAC, FormatALAC,
 		FormatV0, FormatV1, FormatV2,
 		FormatMP3_192K, FormatMP3_256K, FormatAAC_320K,
 		FormatAAC_320K,
 	}
 
-	defaultConfig Config = Config{
-		ConvertRules: map[string]Format{
-			"flac": FormatV0,
-			"alac": FormatV0,
-			"wav":  FormatV0,
+	DefaultConfig Config = Config{
+		ConvertRules: map[string]string{
+			"flac": "mp3v0",
+			"alac": "mp3v0",
+			"wav":  "mp3v0",
 		},
 	}
 )
 
+const PluginName = "sync"
+
 func init() {
-	config.RegisterPlugin("sync", defaultConfig)
+	// map formats
+	DefaultConfig.Formats = make(map[string]Format)
+	for _, f := range FormatList {
+		DefaultConfig.Formats[f.Name] = f
+	}
+
+	configCopy := DefaultConfig
+	config.RegisterPlugin(PluginName, &configCopy, &Config{})
 }
 
 func (s *Sync) Start(c core.Core, db *db.DB) {
 	s.core = c
 	s.db = db
+	s.config = config.Current.Plugins[PluginName].(*Config)
 
 	c.RegisterCommand(core.Command{[]string{"sync", "s"},
 		"Syncs media with a device or folder. By default, lossles files are converted to MP3 V0.",

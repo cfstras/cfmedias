@@ -14,32 +14,33 @@ type IPod struct {
 	core core.Core
 	db   *db.DB
 	sync *sync.Sync
+
+	config *Config
 }
 
 type Config struct {
-	sync.Config
+	ConvertRules map[string]string
 }
 
 var defaultConfig Config = Config{
-	sync.Config{
-		ConvertRules: map[string]sync.Format{
-			"flac": sync.FormatV0,
-			"alac": sync.FormatV0,
-			"wav":  sync.FormatV0,
-		},
-	},
+	ConvertRules: sync.DefaultConfig.ConvertRules,
 }
 
-const Seperator = "\x00"
+const (
+	Seperator  = "\x00"
+	PluginName = "ipod"
+)
 
 func init() {
-	config.RegisterPlugin("ipod", defaultConfig)
+	configCopy := defaultConfig
+	config.RegisterPlugin(PluginName, &configCopy, &Config{})
 }
 
 func (p *IPod) Start(c core.Core, db *db.DB, s *sync.Sync) {
 	p.core = c
 	p.db = db
 	p.sync = s
+	p.config = config.Current.Plugins[PluginName].(*Config)
 
 	c.RegisterCommand(core.Command{[]string{"ipod"},
 		"Syncs media with an iPod device. By default, Lossles files are converted to MP3 V0.",
