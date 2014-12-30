@@ -60,3 +60,10 @@ func I64(v sql.NullInt64) *int64 {
 	}
 	return nil
 }
+
+func StrPtr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}

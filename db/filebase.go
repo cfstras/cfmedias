@@ -209,6 +209,7 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 			log.Log.Println("Error walking files:", err)
 			return nil
 		}
+		//TODO add loop detection
 		err = filepath.Walk(linked, up.step)
 		if err != nil {
 			return err
@@ -235,14 +236,14 @@ func (up *updater) analyze(path string, parent string, file string) error {
 
 	defer tag.Close()
 
-	title := tag.Title()
-	artist := tag.Artist()
-	if title == nil || artist == nil {
-		return errors.New("Title and Artist cannot be nil. File " + path)
-	}
+	title := StrPtr(tag.Title())
+	artist := StrPtr(tag.Artist())
+
+	title, artist = TitleMagic(file, title, artist)
+
 	item := Item{
-		Title:       *title,
-		Artist:      *artist,
+		Title:       title,
+		Artist:      artist,
 		AlbumArtist: NullStr(nil),
 		Album:       NullStr(tag.Album()),
 		Genre:       NullStr(tag.Genre()),
