@@ -8,6 +8,7 @@ import "C"
 import (
 	"encoding/json"
 	"runtime"
+	"time"
 )
 
 type RatingT int32
@@ -35,6 +36,7 @@ var (
 	Length      TrackField = "tracklen"
 	Rating      TrackField = "rating"
 	Playcount   TrackField = "playcount"
+	TimeAdded   TrackField = "time_added"
 )
 
 type Track interface {
@@ -51,6 +53,7 @@ type Track interface {
 	Length() int32
 	Rating() RatingT
 	Playcount() int32
+	TimeAdded() time.Time
 
 	SetTitle(val string)
 	SetAlbum(val string)
@@ -65,6 +68,7 @@ type Track interface {
 	SetLength(val int32)
 	SetRating(val RatingT)
 	SetPlaycount(val int32)
+	SetTimeAdded(val time.Time)
 }
 
 type track struct {
@@ -157,6 +161,9 @@ func (t *track) Rating() RatingT {
 func (t *track) Playcount() int32 {
 	return int32(t.t.playcount)
 }
+func (t *track) TimeAdded() time.Time {
+	return time.Unix(int64(t.t.time_added), 0)
+}
 
 func (t *track) SetTitle(val string) {
 	t.strCache[Title] = val
@@ -215,6 +222,9 @@ func (t *track) SetRating(val RatingT) {
 func (t *track) SetPlaycount(val int32) {
 	t.t.playcount = C.guint32(val)
 }
+func (t *track) SetTimeAdded(val time.Time) {
+	t.t.time_added = C.time_t(val.Unix())
+}
 
 func (t *track) MarshalJSON() ([]byte, error) {
 	m := map[TrackField]interface{}{
@@ -231,6 +241,7 @@ func (t *track) MarshalJSON() ([]byte, error) {
 		Length:      t.Length(),
 		Rating:      t.Rating(),
 		Playcount:   t.Playcount(),
+		TimeAdded:   t.TimeAdded(),
 	}
 	return json.Marshal(m)
 }

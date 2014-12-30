@@ -150,6 +150,7 @@ func (p *IPod) Sync(mountpoint string) error {
 		// don't make sense yet
 		//ipodT.SetRating(t.Rating())
 		//ipodT.SetPlaycount(t.Playcount)
+		ipodT.SetTimeAdded(t.CreatedAt)
 
 		//TODO playlist hierarchy
 
