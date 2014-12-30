@@ -2,9 +2,11 @@ package ipod
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/errrs"
 	"github.com/cfstras/cfmedias/ipod/gpod"
 	"github.com/cfstras/cfmedias/logger"
 	"github.com/cfstras/cfmedias/sync"
@@ -87,23 +89,25 @@ func (p *IPod) Sync(mountpoint string) error {
 	for _, t := range ipodTracks {
 		idx[idxFuncGpod(t)] = t
 	}
-	var tracksMissing []db.Item
+	var tracksMissing []*db.Item
 	// cfmedias db id -> gpod track
 	tracksFound := make(map[int64]gpod.Track)
 	var tracksUnmatched []gpod.Track
 	matched := make(map[string]bool)
-	for _, t := range tracks {
-		match, ok := idx[idxFunc(t)]
+	for i := range tracks {
+		t := &tracks[i]
+		match, ok := idx[idxFunc(*t)]
 		if !ok {
 			tracksMissing = append(tracksMissing, t)
 			continue
 		}
-		matched[idxFunc(t)] = true
+		matched[idxFunc(*t)] = true
 		tracksFound[t.Id] = match
 	}
-	for _, t := range ipodTracks {
-		if !matched[idxFuncGpod(t)] {
-			tracksUnmatched = append(tracksUnmatched, t)
+	for i := range ipodTracks {
+		t := &ipodTracks[i]
+		if !matched[idxFuncGpod(*t)] {
+			tracksUnmatched = append(tracksUnmatched, *t)
 		}
 	}
 	logger.Log.Println(len(tracksFound), "tracks found,",
@@ -125,7 +129,65 @@ func (p *IPod) Sync(mountpoint string) error {
 
 	//TODO update tags
 	//TODO delete unmatched
-	//TODO add missing
-	//TODO save
-	return core.ErrorNotImplemented
+
+	// add missing
+	copyErrors := make(map[*db.Item]error)
+	for _, t := range tracksMissing {
+		logger.Log.Println("Adding", t)
+		ipodT := gpod.NewTrack()
+		ipodT.SetTitle(t.Title)
+		ipodT.SetAlbum(db.StrStr(t.Album))
+		ipodT.SetArtist(t.Artist)
+		ipodT.SetGenre(db.StrStr(t.Genre))
+		//ipodT.SetFiletype(t.Filename)
+		//ipodT.SetComment(t.Comment)
+		//ipodT.SetComposer(t.Composer)
+		//ipodT.SetDescription(t.Description)
+		ipodT.SetAlbumartist(db.StrStr(t.AlbumArtist))
+		//ipodT.SetSize(t.Size)
+		//ipodT.SetLength(t.Length)
+
+		// don't make sense yet
+		//ipodT.SetRating(t.Rating())
+		//ipodT.SetPlaycount(t.Playcount)
+
+		//TODO playlist hierarchy
+
+		path := t.Path()
+		if path == nil {
+			err := errrs.New("No file to copy")
+			logger.Log.Println("Error on track", t, err)
+			copyErrors[t] = err
+			continue
+		}
+		ipodDb.Add(ipodT)
+		ipodDb.MPL().Add(ipodT)
+		err := ipodDb.Copy(ipodT, *path)
+		if err != nil {
+			logger.Log.Println("Error on track", t, err)
+			copyErrors[t] = err
+			ipodDb.MPL().Remove(ipodT)
+			ipodDb.Remove(ipodT)
+		}
+	}
+	err = ipodDb.Save()
+	if err != nil {
+		return err
+	}
+	// give back other errors, if any
+	if len(copyErrors) > 0 {
+		serr := &syncError{
+			Tracks: copyErrors,
+		}
+		return serr
+	}
+	return nil
+}
+
+type syncError struct {
+	Tracks map[*db.Item]error
+}
+
+func (e *syncError) Error() string {
+	return fmt.Sprint(len(e.Tracks), " copy errors")
 }
