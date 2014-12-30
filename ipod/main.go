@@ -128,13 +128,24 @@ func (p *IPod) Sync(mountpoint string) error {
 	logger.Log.Println("Wrote sync-info.json.")
 
 	//TODO update tags
-	//TODO delete unmatched
+
+	// delete unmatched
+	deleteErrors := make(map[gpod.Track]error)
+	for _, t := range tracksUnmatched {
+		logger.Log.Println("Deleting", t)
+		err := t.Delete()
+		if err != nil {
+			logger.Log.Println("Error deleting", t, err)
+			deleteErrors[t] = err
+			continue
+		}
+	}
 
 	// add missing
 	copyErrors := make(map[*db.Item]error)
 	for _, t := range tracksMissing {
 		logger.Log.Println("Adding", t)
-		ipodT := gpod.NewTrack()
+		ipodT := gpod.NewTrack(ipodDb)
 		ipodT.SetTitle(t.Title)
 		ipodT.SetAlbum(db.StrStr(t.Album))
 		ipodT.SetArtist(t.Artist)
@@ -147,6 +158,7 @@ func (p *IPod) Sync(mountpoint string) error {
 		//ipodT.SetSize(t.Size)
 		//ipodT.SetLength(t.Length)
 
+		//TODO add missing fields
 		// don't make sense yet
 		//ipodT.SetRating(t.Rating())
 		//ipodT.SetPlaycount(t.Playcount)
@@ -157,7 +169,7 @@ func (p *IPod) Sync(mountpoint string) error {
 		path := t.Path()
 		if path == nil {
 			err := errrs.New("No file to copy")
-			logger.Log.Println("Error on track", t, err)
+			logger.Log.Println("Error finding", t, err)
 			copyErrors[t] = err
 			continue
 		}
@@ -165,7 +177,7 @@ func (p *IPod) Sync(mountpoint string) error {
 		ipodDb.MPL().Add(ipodT)
 		err := ipodDb.Copy(ipodT, *path)
 		if err != nil {
-			logger.Log.Println("Error on track", t, err)
+			logger.Log.Println("Error copying", t, err)
 			copyErrors[t] = err
 			ipodDb.MPL().Remove(ipodT)
 			ipodDb.Remove(ipodT)
@@ -177,18 +189,18 @@ func (p *IPod) Sync(mountpoint string) error {
 	}
 	// give back other errors, if any
 	if len(copyErrors) > 0 {
-		serr := &syncError{
-			Tracks: copyErrors,
-		}
+		serr := &syncError{deleteErrors, copyErrors}
 		return serr
 	}
 	return nil
 }
 
 type syncError struct {
-	Tracks map[*db.Item]error
+	DeleteErrors map[gpod.Track]error
+	CopyErrors   map[*db.Item]error
 }
 
 func (e *syncError) Error() string {
-	return fmt.Sprint(len(e.Tracks), " copy errors")
+	return fmt.Sprint(len(e.DeleteErrors), "delete errors,",
+		len(e.CopyErrors), "copy errors")
 }

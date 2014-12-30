@@ -7,6 +7,9 @@ const guint32 RatingStep = ITDB_RATING_STEP;
 import "C"
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
 	"runtime"
 	"time"
 )
@@ -69,18 +72,21 @@ type Track interface {
 	SetRating(val RatingT)
 	SetPlaycount(val int32)
 	SetTimeAdded(val time.Time)
+
+	Delete() error
 }
 
 type track struct {
-	t *C.Itdb_Track
+	t  *C.Itdb_Track
+	db *glib
 
 	// cached strings
 	strCache map[TrackField]string
 	myalloc  bool
 }
 
-func newTrack(ptr *C.Itdb_Track, myalloc bool) *track {
-	t := &track{ptr, map[TrackField]string{}, myalloc}
+func newTrack(lib *glib, ptr *C.Itdb_Track, myalloc bool) *track {
+	t := &track{ptr, lib, map[TrackField]string{}, myalloc}
 
 	runtime.SetFinalizer(t, func(t *track) {
 		if myalloc {
@@ -90,9 +96,21 @@ func newTrack(ptr *C.Itdb_Track, myalloc bool) *track {
 	return t
 }
 
-func NewTrack() Track {
+func NewTrack(lib GLib) Track {
 	ptr := C.itdb_track_new()
-	return newTrack(ptr, true)
+	return newTrack(lib.(*glib), ptr, true)
+}
+
+func (t *track) Delete() error {
+	file := str(C.itdb_filename_on_ipod(t.t))
+	err := os.Remove(file)
+	if err != nil {
+		return errors.New(file + ": " + err.Error())
+	}
+	//TODO remove from all playlists
+	t.db.MPL().Remove(t)
+	t.db.Remove(t)
+	return nil
 }
 
 func (t *track) Title() string {
@@ -227,7 +245,15 @@ func (t *track) SetTimeAdded(val time.Time) {
 }
 
 func (t *track) MarshalJSON() ([]byte, error) {
-	m := map[TrackField]interface{}{
+	return json.Marshal(t.makeMap())
+}
+
+func (t *track) String() string {
+	return fmt.Sprint(t.makeMap())
+}
+
+func (t *track) makeMap() map[TrackField]interface{} {
+	return map[TrackField]interface{}{
 		Title:       t.Title(),
 		Album:       t.Album(),
 		Artist:      t.Artist(),
@@ -243,5 +269,4 @@ func (t *track) MarshalJSON() ([]byte, error) {
 		Playcount:   t.Playcount(),
 		TimeAdded:   t.TimeAdded(),
 	}
-	return json.Marshal(m)
 }

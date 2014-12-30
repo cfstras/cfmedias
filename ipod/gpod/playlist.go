@@ -12,6 +12,7 @@ type Playlist interface {
 	Length() int32
 	Add(t Track)
 	Remove(t Track)
+	Contains(t Track) bool
 
 	IsMPL() bool
 }
@@ -45,6 +46,10 @@ func (p *playlist) Remove(t Track) {
 	if p.IsMPL() {
 		t.(*track).myalloc = true
 	}
+}
+
+func (p *playlist) Contains(t Track) bool {
+	return C.itdb_playlist_contains_track(p.p, t.(*track).t) == C.TRUE
 }
 
 func (p *playlist) IsMPL() bool {

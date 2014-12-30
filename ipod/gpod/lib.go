@@ -48,7 +48,7 @@ func (g *glib) Tracks() []Track {
 	len := C.g_list_length(ptr)
 	arr := make([]Track, 0, len)
 	for ptr != nil {
-		track := newTrack((*C.Itdb_Track)(ptr.data), false)
+		track := newTrack(g, (*C.Itdb_Track)(ptr.data), false)
 		arr = append(arr, track)
 		ptr = ptr.next
 	}
