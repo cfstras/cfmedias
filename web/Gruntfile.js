@@ -32,24 +32,34 @@
           }
         },
       },
+      less: {
+        build: {
+          files: {
+            'assets/vendor/css/libs.min.css': [
+              'bower_components/bootstrap/less/bootstrap.less',
+              'bower_components/fontawesome/less/font-awesome.less'
+            ]
+          }
+        }
+      },
       copy: {
         build: {
           files: [
-            {expand: true, cwd: 'bower_components/bootstrap/dist/css/', src: ['bootstrap.min.css'],
-            dest: 'assets/vendor/css/'},
             {expand: true, cwd: 'bower_components/bootstrap/dist/fonts/', src: ['**'],
+            dest: 'assets/vendor/fonts/'},
+            {expand: true, cwd: 'bower_components/fontawesome/fonts/', src: ['**'],
             dest: 'assets/vendor/fonts/'},
           ]
         }
       }
     });
 
-    //grunt.loadNpmTasks('grunt-contrib-sass');
+    grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-ember-templates');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task.
-    grunt.registerTask('default', ['uglify', 'copy']);
+    grunt.registerTask('default', ['uglify', 'less', 'copy']);
   };

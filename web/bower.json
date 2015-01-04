@@ -19,11 +19,11 @@
     "ember": "~1.9.1",
     "ember-data": "^1.0.0-beta.14",
     "moment": "~2.8.4",
-    "bootstrap": "~3.3.1"
+    "bootstrap": "~3.3.1",
+    "fontawesome": "~4.2.0"
   },
   "resolutions": {
-    "ember": "~1.9.1",
-    "handlebars": ">= 2.0.0 < 3.0.0"
+    "ember": "~1.9.1"
   },
   "__TODO": "https://github.com/Addepar/ember-table"
 }
