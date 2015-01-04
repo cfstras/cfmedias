@@ -23,7 +23,7 @@
             sourceMap: true,
           },
           files: {
-            'assets/vendor/libs.min.js': [
+            'assets/vendor/js/libs.min.js': [
               'bower_components/bootstrap/dist/js/bootstrap.js',
               'bower_components/ember/ember.js',
               'bower_components/ember-data/ember-data.js',
