@@ -8,8 +8,10 @@ App.ListView = Ember.ListView.extend({
     //elementWidth: 80,
     //width: 500,
     itemViewClass: Ember.ListItemView.extend({
-        templateName: "index_row"
-    })
+        templateName: "index_row",
+    //    tagName: "tr",
+    }),
+
 });
 
 App.IndexRoute = Ember.Route.extend({
