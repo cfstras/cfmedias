@@ -3,6 +3,7 @@ package web
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"mime"
 	"net/http"
 	"net/http/pprof"
@@ -79,10 +80,56 @@ func (n *NetCmdLine) Start(coreInstance core.Core, db *db.DB) {
 	mapAsset := func(c martini.Context, r *http.Request) {
 		c.Map(r.URL.Path[1:])
 	}
-	m.Get("/", mapAsset, index_html)
+	m.Get("/", func() (string, error) {
+		b, err := index_html()
+		if err != nil {
+			return "", err
+		}
+		str := string(b)
+		var files []string
+		for _, k := range AssetNames() {
+			if strings.HasPrefix(k, "js/") && strings.HasSuffix(k, ".js") {
+				files = append(files, k)
+			}
+		}
+		//TODO sort files?
+		replaceStart, replaceEnd := `<script src="/`, `"></script>`
+		var replace string
+		for _, v := range files {
+			replace += replaceStart + v + replaceEnd
+		}
+		str = strings.Replace(str, `<script src="/vendor/js/app.js"></script>`, replace, 1)
+		return str, err
+	})
+	//TODO if development
+	m.Get("/vendor/js/templates.js", mapAsset, setMime, func() (string, error) {
+		templateFolder := "templates/"
+		extension := ".hbs"
+		var files []string
+		for _, k := range AssetNames() {
+			if strings.HasPrefix(k, templateFolder) && strings.HasSuffix(k, extension) {
+				k = k[len(templateFolder):]
+				k = k[:len(k)-len(extension)]
+				files = append(files, k)
+			}
+		}
+		start, mid, end := `Ember.TEMPLATES['`,
+			`'] = Ember.Handlebars.compile("`, `");`+"\n"
+		var result string
+		for _, v := range files {
+			templ, err := Asset(templateFolder + v + extension)
+			if err != nil {
+				return "", err
+			}
+			result += start + v + mid + template.JSEscapeString(string(templ)) + end
+		}
+		return result, nil
+	})
+
+	m.Get("/vendor/**", mapAsset, setMime, Asset)
 	m.Get("/css/**", mapAsset, setMime, Asset)
-	m.Get("/fonts/**", mapAsset, setMime, Asset)
 	m.Get("/js/**", mapAsset, setMime, Asset)
+	m.Get("/templates/**", mapAsset, setMime, Asset)
 
 	os.Setenv("PORT", fmt.Sprint(config.Current.WebPort))
 	m.Run()

@@ -21,13 +21,16 @@
         build: {
           options: {
             sourceMap: true,
+            sourceMapIncludeSources: true,
           },
           files: {
             'assets/vendor/js/libs.min.js': [
-              'bower_components/bootstrap/dist/js/bootstrap.js',
+              'bower_components/jquery/dist/jquery.js',
+              'bower_components/handlebars/handlebars.js',
               'bower_components/ember/ember.js',
               'bower_components/ember-data/ember-data.js',
-              'bower_components/moment/moment.js'
+              'bower_components/moment/moment.js',
+              'bower_components/bootstrap/dist/js/bootstrap.js',
             ],
           }
         },
