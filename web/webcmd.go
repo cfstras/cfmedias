@@ -81,7 +81,7 @@ func (n *NetCmdLine) Start(coreInstance core.Core, db *db.DB) {
 		c.Map(r.URL.Path[1:])
 	}
 	m.Get("/", func() (string, error) {
-		b, err := index_html()
+		b, err := Asset("index.html")
 		if err != nil {
 			return "", err
 		}

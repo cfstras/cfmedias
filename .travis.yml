@@ -17,3 +17,20 @@ script:
  - echo help | ./cfmedias
  - echo list | ./cfmedias
  - echo quit | ./cfmedias
+
+ - make
+ - echo help | ./cfmedias
+ - echo list | ./cfmedias
+ - echo quit | ./cfmedias
+
+ - make clean
+ - make build
+ - echo help | ./cfmedias
+ - echo list | ./cfmedias
+ - echo quit | ./cfmedias
+
+ - make clean
+ - make
+ - echo help | ./cfmedias
+ - echo list | ./cfmedias
+ - echo quit | ./cfmedias
