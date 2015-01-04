@@ -37,7 +37,11 @@ start:
 	./cfmedias
 
 clean:
-	rm cfmedias
+	rm -f cfmedias
+	rm -rf web/node_modules
+	rm -rf web/bower_components
+	rm -rf web/assets/vendor
+	rm -rf web/bindata.go
 
 fix: goimports
 	goimports -l -w $(FOLDERS)
@@ -50,12 +54,15 @@ fix: goimports
 grunt: web/assets/vendor
 web/assets/vendor: web/bower_components web/Gruntfile.js
 	cd web && node node_modules/grunt-cli/bin/grunt
+	touch web/assets/vendor
 
-web/bower_components: web/bower.json web/node_modules
+web/bower_components: web/node_modules web/bower.json
 	cd web && node node_modules/bower/bin/bower install
+	touch web/bower_components
 
 web/node_modules: web/package.json
-	cd web && npm install -q
+	cd web && npm install --quiet
+	touch web/node_modules
 
 goimports:
 	go get -v code.google.com/p/go.tools/cmd/goimports
