@@ -21,10 +21,10 @@ compile:
 	go get -d
 	go build -v
 
-bindata-final: bindata
+bindata-final: bindata grunt
 	$(BINDATA) -debug=false -nocompress=false $(BINDATA_FLAGS)
 
-bindata-debug: bindata
+bindata-debug: bindata grunt
 	$(BINDATA) -debug=true $(BINDATA_FLAGS)
 
 run: build-debug start
@@ -45,6 +45,17 @@ fix: goimports
 		go fix "$$f"; \
 		go tool vet -composites=false "$$f"; \
 	done
+
+.PHONY: grunt
+grunt: web/assets/vendor
+web/assets/vendor: web/bower_components web/Gruntfile.js
+	cd web && node node_modules/grunt-cli/bin/grunt
+
+web/bower_components: web/bower.json web/node_modules
+	cd web && node node_modules/bower/bin/bower install
+
+web/node_modules: web/package.json
+	cd web && npm install -q
 
 goimports:
 	go get -v code.google.com/p/go.tools/cmd/goimports

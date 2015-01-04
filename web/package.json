@@ -1,0 +1,27 @@
+{
+  "name": "cfmedias-web",
+  "title": "Web Server assets for cfmedias",
+  "description": "",
+  "version": "0.0.1",
+  "private": true,
+  "homepage": "http://github.com/cfstras/cfmedias",
+  "authors": [
+    "Claus Strasburger <c@cfs.im>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/cfstras/cfmedias"
+  },
+  "bugs": "http://github.com/cfstras/cfmedias/issues",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "bower": "~1.3.12",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-concat": "^0.5.0",
+    "grunt-contrib-copy": "^0.7.0",
+    "grunt-contrib-sass": "~0.8.1",
+    "grunt-contrib-uglify": "~0.5.0",
+    "grunt-ember-templates": "~0.5.0"
+  },
+  "keywords": []
+}
