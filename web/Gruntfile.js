@@ -29,6 +29,7 @@
               'bower_components/handlebars/handlebars.js',
               'bower_components/ember/ember.js',
               'bower_components/ember-data/ember-data.js',
+              'bower_components/ember-table/dist/ember-table.js',
               'bower_components/moment/moment.js',
               'bower_components/bootstrap/dist/js/bootstrap.js',
             ],
@@ -40,7 +41,8 @@
           files: {
             'assets/vendor/css/libs.min.css': [
               'bower_components/bootstrap/less/bootstrap.less',
-              'bower_components/fontawesome/less/font-awesome.less'
+              'bower_components/fontawesome/less/font-awesome.less',
+              'bower_components/ember-table/dist/ember-table.css',
             ]
           }
         }
