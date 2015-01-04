@@ -3,3 +3,12 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
+
+/* ember-list */
+.ember-list-view {
+  overflow: auto;
+  position: relative;
+}
+.ember-list-item-view {
+  position: absolute;
+}
