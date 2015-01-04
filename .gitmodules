@@ -1,0 +1,3 @@
+[submodule "web/list-view"]
+	path = web/list-view
+	url = https://github.com/emberjs/list-view

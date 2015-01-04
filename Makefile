@@ -42,6 +42,7 @@ clean:
 	rm -rf web/bower_components
 	rm -rf web/assets/vendor
 	rm -rf web/bindata.go
+	cd web/list-view && git clean -dfx
 
 fix: goimports
 	goimports -l -w $(FOLDERS)
@@ -52,9 +53,13 @@ fix: goimports
 
 .PHONY: grunt
 grunt: web/assets/vendor
-web/assets/vendor: web/bower_components web/Gruntfile.js
+
+web/assets/vendor: web/bower_components web/Gruntfile.js web/list-view/dist/list-view.js
 	cd web && node node_modules/grunt-cli/bin/grunt
 	touch web/assets/vendor
+
+web/list-view/dist/list-view.js:
+	cd web/list-view && npm install && npm run build-all
 
 web/bower_components: web/node_modules web/bower.json
 	cd web && node node_modules/bower/bin/bower install
