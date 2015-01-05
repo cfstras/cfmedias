@@ -1,7 +1,6 @@
 package web
 
 import (
-	"bytes"
 	"fmt"
 	"html/template"
 	"mime"
@@ -26,30 +25,32 @@ type NetCmdLine struct {
 	martini *martini.ClassicMartini
 }
 
-func (n *NetCmdLine) api(r render.Render, ctx *core.CommandContext) (int, string) {
+func (n *NetCmdLine) api(r render.Render, ctx *core.CommandContext,
+	w http.ResponseWriter) {
 	// execute command
 	result := n.core.Cmd(*ctx)
 	if result.Error == core.ErrorCmdNotFound {
-		return http.StatusNotFound, result.Error.Error()
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, result.Error.Error())
+		return
 	}
 	if result.Error != nil {
-		return http.StatusInternalServerError, result.Error.Error()
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, result.Error.Error())
+		return
 	}
 	if result.IsRaw {
-		str := &bytes.Buffer{}
 		if result.Result != nil {
 			if array, ok := result.Result.([]interface{}); ok {
 				for _, v := range array {
-					fmt.Fprintln(str, v)
+					fmt.Fprintln(w, v)
 				}
 			} else {
-				fmt.Fprintln(str, result.Result)
+				fmt.Fprintln(w, result.Result)
 			}
 		}
-		return 200, str.String()
 	} else {
 		r.JSON(200, result.Result)
-		return 200, ""
 	}
 }
 
