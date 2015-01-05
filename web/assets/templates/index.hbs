@@ -1,5 +1,5 @@
 <h3>Media</h3>
-<div class="table-responsive height">
+<div class="table-responsive minus-h3">
 	<table class="table table-striped table-condensed table-hover height">
 		<thead><tr>
 			<th>Title</th><th>Artist</th><th>Album</th><th>Genre</th>
@@ -7,10 +7,10 @@
 		<tbody class="scroll">
 			{{#each item in model}}
 				<tr>
-					<td>{{item.Title}}</td>
-					<td>{{item.Artist}}</td>
-					<td>{{item.Album}}</td>
-					<td>{{item.Genre}}</td>
+					<td class="row-1">{{item.Title}}</td>
+					<td class="row-2">{{item.Artist}}</td>
+					<td class="row-3">{{item.Album}}</td>
+					<td class="row-4">{{item.Genre}}</td>
 				</tr>
 			{{/each}}
 		</tbody>

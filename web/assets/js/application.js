@@ -7,6 +7,10 @@ App.ApplicationView = Em.View.extend({
     classNames: ['height'],
 });
 
+App.IndexView = Em.View.extend({
+    classNames: ['index', 'height'],
+});
+
 App.IndexRoute = Em.Route.extend({
     model: function() {
         var res = this.controllerFor('api').get('list', {
