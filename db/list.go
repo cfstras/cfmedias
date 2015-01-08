@@ -56,8 +56,14 @@ func (db *DB) ListQuery(query string) ([]Item, error) {
 	}
 	res := make([]Item, 0)
 	err := db.db.Where(query).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
 	for i := range res { //TODO do this with join
-		db.db.Find(&res[i].Folder, res[i].FolderId)
+		err = db.db.Find(&res[i].Folder, res[i].FolderId).Error
+		if err != nil {
+			return res, err
+		}
 	}
 
 	return res, err
