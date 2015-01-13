@@ -25,7 +25,7 @@
           },
           files: {
             'assets/vendor/js/libs.min.js': [
-              'bower_components/jquery/jquery.js',
+              'bower_components/jquery/dist/jquery.js',
               'bower_components/handlebars/handlebars.js',
               'bower_components/ember/ember.js',
               'bower_components/ember-data/ember-data.js',
