@@ -1,34 +1,45 @@
 cfmedias [![Build Status](https://travis-ci.org/cfstras/cfmedias.svg?branch=master)](https://travis-ci.org/cfstras/cfmedias)
 ========
-Making it easy to organize your media.
+The media player and manager you need.
 
 Overview
 --------
 cfmedias aims to let you take control of your media library.  
-It lets you manage all of your media in a central place.  
-It lets you listen to your music from any device you own and still get ratings and playcounts back to cfmedias.
 
-What it should be one day:
+Priorities:
 
 - fast
-- supporting every media format you could imagine
-- networking-enabled to let you share media within your home network
-  and keeping it in sync whilst letting you stream it freely
-- able to import libraries from iTunes, WinAmp and others
-- able to automatically add tags and pictures to your media
-- able to make full or incremental backups
-- highly portable
+- support all common media formats, both lossless and lossy
+- iPod, Android and mp4-player sync
+- incremental import, export databases from iTunes, Foobar2k, Google Play Music
+- metadata, rating and play/skip-count import from all of the above, plus Last.fm
+- highly portable, full or incremental backups
+- play behaviour analysis and automatic playlisting
+- both easy and advanced filter playlists
 
-etc, etc...
+Status
+------
+_I'll try and keep this up to date._
+
+What works:
+
+- single-binary with web server & assets
+- media scanner for music
+- iPod sync, at least for titles
+- HTTP and commandline API
+- crude web-interface with no features
+- sqlite database (subject to a lot of change)
+- audioscrobbler server endpoint
 
 Compiling
 ---------
-You will need the Go package, git, mercurial, libportaudio, libsqlite3 and taglib.  
+You will need the Go package, git, mercurial, make and npm.  
+Also, you will need development headers for libportaudio, libsqlite3, taglib and
+libgpod.  
 On OS X, you need at least Go 1.2rc5.
 
     git clone --recursive https://github.com/cfstras/cfmedias
     cd cfmedias
-    make deps
     make run
 
 
