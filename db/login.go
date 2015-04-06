@@ -11,7 +11,7 @@ import (
 	"math/big"
 	"regexp"
 
-	"code.google.com/p/go.crypto/pbkdf2"
+	"golang.org/x/crypto/pbkdf2"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/errrs"
 	"github.com/cfstras/cfmedias/util"
