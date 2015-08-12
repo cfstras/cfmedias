@@ -3,7 +3,14 @@
 package ipod
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+
+	"github.com/cfstras/cfmedias/db"
+	"github.com/cfstras/cfmedias/errrs"
 	"github.com/cfstras/cfmedias/ipod/gpod"
+	"github.com/cfstras/cfmedias/logger"
 )
 
 func (p *IPod) Sync(mountpoint string) error {

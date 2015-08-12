@@ -1,16 +1,26 @@
-#TODO add .exe on windows boxen
 
 GOIMPORTS := $(GOPATH)/bin/goimports
 GO := go
 
-.PHONY: all build build-debug compile bindata-final bindata-debug run start clean fix bindata-dep
+.PHONY: all build build-debug compile bindata-final bindata-debug run start \
+	clean fix bindata-dep check-gcc
 
-FOLDERS := $(shell find * -type d)
+FOLDERS := $(shell find * -maxdepth 2 -type d | grep -v web)
 
-all: build-debug
+all: check-gcc build-debug
 
-build: bindata-final compile
-build-debug: bindata-debug compile
+build: check-gcc bindata-final compile
+build-debug: check-gcc bindata-debug compile
+
+
+##########################
+
+check-gcc:
+	@# check for cygwin: sqlite will not build with cgo and cygwin.
+	@sh -c 'gcc -v 2>&1 | grep cygwin >/dev/null || exit 0; echo && echo "Error: Please use mingw, not \
+	cygwin."&& echo && exit 1'
+
+
 
 compile:
 	@echo -------------------------------------------------------------------
@@ -43,6 +53,10 @@ clean:
 	rm -rf web/bindata.go
 
 fix: goimports
+ifeq ($(FOLDERS),)
+	@echo "Find is wrong!"
+	@exit 1
+endif
 	$(GOIMPORTS) -l -w $(FOLDERS)
 	for f in $$(find . -type f -name "*.go"); do \
 		$(GO) fix "$$f"; \

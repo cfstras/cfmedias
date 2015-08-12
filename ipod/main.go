@@ -1,16 +1,11 @@
 package ipod
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/cfstras/cfmedias/config"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/db"
-	"github.com/cfstras/cfmedias/errrs"
-	"github.com/cfstras/cfmedias/logger"
 	"github.com/cfstras/cfmedias/sync"
 	"github.com/cfstras/cfmedias/util"
-	"io/ioutil"
 )
 
 type IPod struct {
@@ -57,5 +52,3 @@ func (p *IPod) Start(c core.Core, db *db.DB, s *sync.Sync) {
 			return core.ResultByError(p.Sync(*path))
 		}})
 }
-
-
