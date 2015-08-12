@@ -21,10 +21,10 @@ compile:
 	$(GO) build -v
 
 bindata-final: bindata grunt
-	$(GO) run bindata/main.go
+	$(GO) run cmd/compile-assets.go
 
 bindata-debug: bindata grunt
-	$(GO) run bindata/main.go -debug
+	$(GO) run cmd/compile-assets.go -debug
 
 run: build-debug start
 
@@ -67,4 +67,4 @@ goimports:
 	$(GO) get -v golang.org/x/tools/cmd/goimports
 
 bindata:
-	$(GO) get -v github.com/jteeuwen/go-bindata/...
+	$(GO) get -v github.com/jteeuwen/go-bindata
