@@ -1,8 +1,7 @@
 #TODO add .exe on windows boxen
 
-BINDATA := go-bindata
-BINDATA_DIRS = $(shell find web/assets -type d)
-BINDATA_FLAGS = -o=web/bindata.go -pkg=web -prefix web/assets $(BINDATA_DIRS)
+GOIMPORTS := $(GOPATH)/bin/goimports
+GO := go
 
 .PHONY: all build build-debug compile bindata-final bindata-debug run start clean fix bindata-dep
 
@@ -18,20 +17,20 @@ compile:
 	@echo if you encounter include errors please install portaudio1.9-dev,
 	@echo libtagc0-dev and libgpod-dev with your package manager
 	@echo -------------------------------------------------------------------
-	go get -d
-	go build -v
+	$(GO) get -d
+	$(GO) build -v
 
 bindata-final: bindata grunt
-	$(BINDATA) -debug=false -nocompress=false $(BINDATA_FLAGS)
+	$(GO) run bindata/main.go
 
 bindata-debug: bindata grunt
-	$(BINDATA) -debug=true $(BINDATA_FLAGS)
+	$(GO) run bindata/main.go -debug
 
 run: build-debug start
 
 test:
-	go get -d ./...
-	go test ./...
+	$(GO) get -d ./...
+	$(GO) test ./...
 
 start:
 	./cfmedias
@@ -44,10 +43,10 @@ clean:
 	rm -rf web/bindata.go
 
 fix: goimports
-	goimports -l -w $(FOLDERS)
+	$(GOIMPORTS) -l -w $(FOLDERS)
 	for f in $$(find . -type f -name "*.go"); do \
-		go fix "$$f"; \
-		go tool vet -composites=false "$$f"; \
+		$(GO) fix "$$f"; \
+		$(GO) tool vet -composites=false "$$f"; \
 	done
 
 .PHONY: grunt
@@ -65,7 +64,7 @@ web/node_modules: web/package.json
 	touch web/node_modules
 
 goimports:
-	go get -v code.google.com/p/go.tools/cmd/goimports
+	$(GO) get -v golang.org/x/tools/cmd/goimports
 
 bindata:
-	go get -v github.com/jteeuwen/go-bindata/...
+	$(GO) get -v github.com/jteeuwen/go-bindata/...
