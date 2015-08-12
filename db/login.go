@@ -11,10 +11,10 @@ import (
 	"math/big"
 	"regexp"
 
-	"golang.org/x/crypto/pbkdf2"
 	"github.com/cfstras/cfmedias/core"
 	"github.com/cfstras/cfmedias/errrs"
 	"github.com/cfstras/cfmedias/util"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 const (

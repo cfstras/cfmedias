@@ -1,8 +1,9 @@
 package db_test
 
 import (
-	"github.com/cfstras/cfmedias/db"
 	"testing"
+
+	"github.com/cfstras/cfmedias/db"
 )
 
 type item struct {

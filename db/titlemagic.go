@@ -1,9 +1,10 @@
 package db
 
 import (
-	log "github.com/cfstras/cfmedias/logger"
 	"regexp"
 	"strings"
+
+	log "github.com/cfstras/cfmedias/logger"
 )
 
 func TitleMagic(file, titleOld, artistOld string) (title, artist string) {
