@@ -9,7 +9,7 @@ before_install:
  - export PATH=$PATH:$GOPATH/bin
 
 install:
- - sudo apt-get install -y libtagc0-dev portaudio1.?9-dev libgpod-dev
+ - sudo apt-get install -y libtagc0-dev portaudio1.?9-dev libgpod-dev libvlc-dev
 
 script:
  - make build

@@ -17,8 +17,8 @@ build-debug: check-gcc bindata-debug compile
 
 check-gcc:
 	@# check for cygwin: sqlite will not build with cgo and cygwin.
-	@sh -c 'gcc -v 2>&1 | grep cygwin >/dev/null || exit 0; echo && echo "Error: Please use mingw, not \
-	cygwin."&& echo && exit 1'
+#	@sh -c 'gcc -v 2>&1 | grep cygwin >/dev/null || exit 0; echo && echo "Error: Please use mingw, not \
+#	cygwin."&& echo && exit 1'
 
 
 
@@ -28,7 +28,7 @@ compile:
 	@echo libtagc0-dev and libgpod-dev with your package manager
 	@echo -------------------------------------------------------------------
 	$(GO) get -d
-	$(GO) build -v
+	$(GO) build -v -ldflags='-extldflags="-static"'
 
 bindata-final: bindata grunt
 	$(GO) run cmd/compile-assets.go
