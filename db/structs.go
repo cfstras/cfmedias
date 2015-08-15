@@ -25,7 +25,7 @@ type Item struct {
 	AlbumArtist   sql.NullString `sql:"size:255"`
 	Album         sql.NullString `sql:"size:255" json:",string"`
 	Genre         sql.NullString `sql:"size:255"` //TODO more refined genres
-	TrackNumber   uint32
+	TrackNumber   sql.NullString `sql:"size:16"`
 	Filename      sql.NullString `sql:"size:255"`
 	MusicbrainzId sql.NullString `sql:"size:36"`
 
@@ -87,7 +87,7 @@ type User struct {
 }
 
 func (i *Item) String() string {
-	return fmt.Sprintf("Item[%d]{%s / %s - %s / %d %s, %s}", i.Id, i.Artist,
+	return fmt.Sprintf("Item[%d]{%s / %s - %s / %s %s, %s}", i.Id, i.Artist,
 		str(i.AlbumArtist), str(i.Album), i.TrackNumber, i.Title, str(i.Genre))
 }
 func str(s sql.NullString) string {

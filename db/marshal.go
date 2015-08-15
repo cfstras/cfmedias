@@ -74,3 +74,10 @@ func StrStr(v sql.NullString) string {
 	}
 	return ""
 }
+
+func SqlStr(v string) sql.NullString {
+	if v == "" {
+		return sql.NullString{}
+	}
+	return sql.NullString{Valid: true, String: v}
+}

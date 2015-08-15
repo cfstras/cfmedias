@@ -12,7 +12,7 @@ import (
 	"github.com/cfstras/cfmedias/core"
 	errors "github.com/cfstras/cfmedias/errrs"
 	log "github.com/cfstras/cfmedias/logger"
-	"github.com/cfstras/go-taglib"
+	"github.com/cfstras/cfmedias/vlc"
 	"github.com/jinzhu/gorm"
 )
 
@@ -31,6 +31,7 @@ type updater struct {
 	importFiles  chan entry // files to import
 	success      chan bool
 	stopStepping chan bool
+	vlc          *vlc.VLC
 
 	// the receiving goroutine shall increment these
 	numAllFiles      int
@@ -69,8 +70,16 @@ func (d *DB) Update() {
 		newFiles:     make(chan entry, bufferSize),
 		importFiles:  make(chan entry, bufferSize),
 		success:      make(chan bool),
-		stopStepping: make(chan bool, 1)}
+		stopStepping: make(chan bool, 1),
+	}
 	up.tx <- tx
+
+	var err error
+	up.vlc, err = vlc.New()
+	if err != nil {
+		log.Log.Println("Could not init libVLC", err)
+		return
+	}
 
 	go func() {
 		err := filepath.Walk(searchPath, up.step)
@@ -227,17 +236,21 @@ func (up *updater) step(file string, info os.FileInfo, err error) error {
 func (up *updater) analyze(path string, parent string, file string) error {
 	//log.Log.Println("doing", path)
 
-	tag, err := taglib.Read(path)
+	tag, err := up.vlc.MediaNewPath(path)
 	if err != nil {
 		log.Log.Println("error reading file", path, "-", err)
 		up.numInvalidFiles++
 		return nil
 	}
+	defer tag.Release()
+	tag.Parse()
+	err = vlc.LastError()
+	if err != nil {
+		return err
+	}
 
-	defer tag.Close()
-
-	title := StrPtr(tag.Title())
-	artist := StrPtr(tag.Artist())
+	title := tag.GetMeta(vlc.MetaTitle)
+	artist := tag.GetMeta(vlc.MetaArtist)
 
 	title, artist = TitleMagic(file, title, artist)
 
@@ -245,13 +258,17 @@ func (up *updater) analyze(path string, parent string, file string) error {
 		Title:       title,
 		Artist:      artist,
 		AlbumArtist: NullStr(nil),
-		Album:       NullStr(tag.Album()),
-		Genre:       NullStr(tag.Genre()),
-		TrackNumber: uint32(tag.Track()),
+		Album:       SqlStr(tag.GetMeta(vlc.MetaAlbum)),
+		Genre:       SqlStr(tag.GetMeta(vlc.MetaGenre)),
+		TrackNumber: SqlStr(tag.GetMeta(vlc.MetaTrackNumber)),
 		Folder:      Folder{Path: parent},
-		Filename:    NullStr(&file),
+		Filename:    SqlStr(file),
 	}
-	//TODO get album, check ID etc
+	//TODO get albumartst, length, check ID etc
+	err = vlc.LastError()
+	if err != nil {
+		return err
+	}
 
 	tx := <-up.tx
 	err = tx.FirstOrCreate(&item.Folder, item.Folder).Error

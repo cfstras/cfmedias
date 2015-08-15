@@ -70,10 +70,10 @@ func (d *DB) Close() error {
 
 // checks db schema and tables
 func (d *DB) checkTables() error {
-	d.db.AutoMigrate(Item{})
-	//db.AutoMigrate(Album{})
-	d.db.AutoMigrate(Folder{})
-	d.db.AutoMigrate(User{})
+	d.db.AutoMigrate(&Item{})
+	//db.AutoMigrate(&Album{})
+	d.db.AutoMigrate(&Folder{})
+	d.db.AutoMigrate(&User{})
 
 	return nil
 }
