@@ -28,7 +28,7 @@ compile:
 	@echo libtagc0-dev and libgpod-dev with your package manager
 	@echo -------------------------------------------------------------------
 	$(GO) get -d
-	$(GO) build -v -ldflags='-extldflags="-static"'
+	$(GO) build -v
 
 bindata-final: bindata grunt
 	$(GO) run cmd/compile-assets.go

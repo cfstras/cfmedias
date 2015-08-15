@@ -1,9 +1,9 @@
 package main
 
 import (
-	vlc "./.."
 	"flag"
 	"fmt"
+	"github.com/cfstras/cfmedias/vlc"
 	"time"
 )
 
